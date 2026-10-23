@@ -9,8 +9,8 @@ window.BLF_DATA = {
     social: {
       discord: "https://discord.com/invite/Jg9G6TgAen", twitch: "https://www.twitch.tv/blfesport", youtube: "https://www.youtube.com/@BLFesport", tiktok: "https://www.tiktok.com/@blfesport", instagram: "https://www.instagram.com/blf_esport/", x: "https://x.com/BLFesport_"
     },
-    streamChannel: "",
-    youtubeChannel: ""
+    streamChannel: "https://www.twitch.tv/blfesport",
+    youtubeChannel: "https://www.youtube.com/@BLFesport"
   },
   announcements: [
     {
