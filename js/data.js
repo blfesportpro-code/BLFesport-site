@@ -7,7 +7,7 @@ window.BLF_DATA = {
     description: "BLFesport est une organisation esport tournée vers la compétition, la progression et l'esprit d'équipe.",
     season: "SAISON À RENSEIGNER",
     social: {
-      discord: "https://discord.com/invite/Jg9G6TgAen", twitch: "https://www.twitch.tv/blfesport", youtube: "", tiktok: "", instagram: "", x: ""
+      discord: "https://discord.com/invite/Jg9G6TgAen", twitch: "https://www.twitch.tv/blfesport", youtube: "https://www.youtube.com/@BLFesport", tiktok: "https://www.tiktok.com/@blfesport", instagram: "", x: ""
     },
     streamChannel: "",
     youtubeChannel: ""
