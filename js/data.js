@@ -60,7 +60,7 @@ window.BLF_DATA = {
     { name: "Votre marque ici", description: "Emplacement réservé à un futur partenaire officiel.", url: "", logo: "" }
   ],
   shop: [
-    { name: "Maillot BLFesport", price: "Prix à définir", description: "Produit en préparation — aucune commande ni aucun paiement disponible.", image: "", available: false },
+    { name: "Maillot BLFesport", price: "Prix à définir", description: "Produit en préparation — aucune commande ni aucun paiement disponible.", image: "assets/0ECB3553-C590-4A74-B230-6FC889CC7016_L0_001-07_08_2025 23_00_58.png", available: false },
     { name: "Accessoire BLFesport", price: "Prix à définir", description: "Emplacement pour un futur produit officiel.", image: "", available: false }
   ]
 };
