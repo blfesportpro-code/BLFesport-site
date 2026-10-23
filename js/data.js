@@ -3,11 +3,11 @@
 window.BLF_DATA = {
   site: {
     name: "BLFesport",
-    tagline: "L'ambition. La précision. La victoire.",
+    tagline: "Gagner. Progresser. S'amuser.",
     description: "BLFesport est une organisation esport tournée vers la compétition, la progression et l'esprit d'équipe.",
     season: "SAISON À RENSEIGNER",
     social: {
-      discord: "", twitch: "", youtube: "", tiktok: "", instagram: "", x: ""
+      discord: "https://discord.com/invite/Jg9G6TgAen", twitch: "https://www.twitch.tv/blfesport", youtube: "", tiktok: "", instagram: "", x: ""
     },
     streamChannel: "",
     youtubeChannel: ""
