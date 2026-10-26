@@ -47,7 +47,7 @@ window.BLF_DATA = {
   players: [
     { nickname: "berat_smnl", avatar: "", role: "Joueur", bio: "", stats: "", social: "" },
     { nickname: "Foamy", avatar: "assets/Astr_.png", role: "Joueur", bio: "", stats: "", social: "" },
-    { nickname: "Astr_", avatar: "", role: "Joueur", bio: "", stats: "", social: "" }
+    { nickname: "Astr_", avatar: "assets/Foymi.png", role: "Joueur", bio: "", stats: "", social: "" }
   ]
 },,
     { id: "roster-c", name: "Roster C", subtitle: "Projet compétitif", game: "Rocket League", status: "Composition à renseigner", accent: "dark", description: "Ce roster sera présenté lorsque ses informations seront confirmées.", players: [] }
