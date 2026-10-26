@@ -91,7 +91,7 @@ window.BLF_DATA = {
   {
     nickname: "Zaiox_gaming",
     role: "Gérant STAFF",
-    avatar: "assets/Fond blanc élégant et minimaliste Image de profil Twitter.png",
+    avatar: "assets/Zaiox.png",
     bio: "Gérant STAFF de la BLFesport, fondateur de la Shadow Esport et streamer."
   },
   {
