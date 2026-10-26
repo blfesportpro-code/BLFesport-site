@@ -99,7 +99,7 @@ window.BLF_DATA = {
   {
     nickname: "SkyRell",
     role: "Caster",
-    avatar: "",
+    avatar: "assets/IMG_1289.jpeg",
     bio: "Caster de la BLFesport."
   }
 ],
