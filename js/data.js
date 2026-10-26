@@ -69,8 +69,6 @@ window.BLF_DATA = {
   seasonStats: [
     { label: "Matchs joués", value: "—" },
     { label: "Victoires", value: "—" },
-    { label: "Tournois", value: "—" },
-    { label: "Classement", value: "À renseigner" }
   ],
   tournaments: [],
   videos: [
