@@ -97,10 +97,10 @@ window.BLF_DATA = {
     bio: "Gérant STAFF de la BLFesport, fondateur de la Shadow Esport et streamer."
   },
   {
-    nickname: "Pseudo3",
-    role: "Graphiste",
-    avatar: "assets/staff3.png",
-    bio: "Création des visuels officiels de BLFesport."
+    nickname: "SkyRell",
+    role: "Caster",
+    avatar: "",
+    bio: "Caster de la BLFesport."
   }
 ],
   partners: [
