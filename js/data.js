@@ -74,8 +74,15 @@ window.BLF_DATA = {
   ],
   tournaments: [],
   videos: [
-    /* Ajoutez une vidéo : { title, type, date, url, youtubeId, description } */
-  ],
+  {
+    title: "BLFesport is ready for RLCS !",
+    type: "YouTube Short",
+    date: "2025-11-13",
+    url: "https://youtube.com/shorts/qhdDV9Ok0KY?is=NX_V9bI040wOoffe",
+    youtubeId: "ABC123XYZ",
+    description: "Les meilleurs moments de BLFesport."
+  }
+],,
   staff: [
     { nickname: "Bifyud_", role: "Fondateur", avatar: "assets/Bifyud.png", bio: "Bifyud_ est le fondateur de la BLFesport et streamer sur Twitch !" }
   ],
