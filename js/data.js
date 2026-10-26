@@ -50,7 +50,7 @@ window.BLF_DATA = {
     { nickname: "Astr_", avatar: "assets/Foymi.png", role: "Joueur", bio: "", stats: "", social: "" }
   ]
 },,
-    { id: "roster-c", name: "Roster C", subtitle: "Projet compétitif", game: "Rocket League", status: "Composition à renseigner", accent: "dark", description: "Ce roster sera présenté lorsque ses informations seront confirmées.", players: [] }
+    { id: "roster-c", name: "Roster ACADEMIQUE", subtitle: "Projet compétitif", game: "Rocket League", status: "Composition à renseigner", accent: "dark", description: "Ce roster sera présenté lorsque ses informations seront confirmées.", players: [] }
   ],
   matches: [
     /* Exemple désactivé : renseignez date au format ISO local, adversaire et compétition, puis passez example à false. */
