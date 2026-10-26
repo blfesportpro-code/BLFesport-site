@@ -46,7 +46,7 @@ window.BLF_DATA = {
   description: "Le Roster B de BLFesport entre en compétition.",
   players: [
     { nickname: "berat_smnl", avatar: "", role: "Joueur", bio: "", stats: "", social: "" },
-    { nickname: "Foamy", avatar: "", role: "Joueur", bio: "", stats: "", social: "" },
+    { nickname: "Foamy", avatar: "assets/Astr_.png", role: "Joueur", bio: "", stats: "", social: "" },
     { nickname: "Astr_", avatar: "", role: "Joueur", bio: "", stats: "", social: "" }
   ]
 },,
