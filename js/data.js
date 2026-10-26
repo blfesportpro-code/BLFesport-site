@@ -45,7 +45,7 @@ window.BLF_DATA = {
   accent: "silver",
   description: "Le Roster B de BLFesport entre en compétition.",
   players: [
-    { nickname: "berat_smnl", avatar: "assets/Fond blanc élégant et minimaliste Image de profil Twitter.png", role: "Joueur", bio: "", stats: "", social: "" },
+    { nickname: "berat_smnl", avatar: "assets/Berat.png", role: "Joueur", bio: "", stats: "", social: "" },
     { nickname: "Foamy", avatar: "assets/Astr_.png", role: "Joueur", bio: "", stats: "", social: "" },
     { nickname: "Astr_", avatar: "assets/Foymi.png", role: "Joueur", bio: "", stats: "", social: "" }
   ]
