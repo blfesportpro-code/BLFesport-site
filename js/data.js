@@ -77,7 +77,7 @@ window.BLF_DATA = {
     /* Ajoutez une vidéo : { title, type, date, url, youtubeId, description } */
   ],
   staff: [
-    { nickname: "Staff à renseigner", role: "Responsable", avatar: "", bio: "Les profils du staff seront ajoutés après confirmation." }
+    { nickname: "Bifyud_", role: "Fondateur", avatar: "", bio: "Bifyud_ est le fondateur de la BLFesport et streamer sur Twitch !" }
   ],
   partners: [
     { name: "Instant Gaming", description: "Instant Gaming × BLFesport : Envie de jouer à prix réduit ? Retrouvez vos jeux préférés sur Instant Gaming grâce à notre lien partenaire ! En passant par notre lien, vous soutenez également le développement de BLFesport et nos projets esports.", url: "https://www.instant-gaming.com/?igr=blfesportoff", logo: "assets/instant-gaming-serios-logo-2.png" }
