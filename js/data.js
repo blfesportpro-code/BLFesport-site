@@ -90,7 +90,7 @@ window.BLF_DATA = {
     { name: "Instant Gaming", description: "Instant Gaming × BLFesport : Envie de jouer à prix réduit ? Retrouvez vos jeux préférés sur Instant Gaming grâce à notre lien partenaire ! En passant par notre lien, vous soutenez également le développement de BLFesport et nos projets esports.", url: "https://www.instant-gaming.com/?igr=blfesportoff", logo: "assets/instant-gaming-serios-logo-2.png" }
   ],
   shop: [
-    { name: "Maillot BLFesport", price: "Prix à définir", description: "Produit en préparation — aucune commande ni aucun paiement disponible.", image: "assets/DFC1344A-1107-446D-885E-7632FB3649EE_L0_001-05_09_2025 21_47_34.png", available: false },
+    { name: "Maillot BLFesport", price: "Prix à définir", description: "Produit en préparation — aucune commande ni aucun paiement disponible.", image: "assets/IMG_1302.png", available: false },
     { name: "Accessoire BLFesport", price: "Prix à définir", description: "Emplacement pour un futur produit officiel.", image: "assets/Design_sans_titre__3_-removebg-preview.png", available: false }
   ]
 };
