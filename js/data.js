@@ -79,10 +79,10 @@ window.BLF_DATA = {
     type: "YouTube Short",
     date: "2025-11-13",
     url: "https://youtube.com/shorts/qhdDV9Ok0KY?is=NX_V9bI040wOoffe",
-    youtubeId: "ABC123XYZ",
+    youtubeId: "qhdDV9Ok0KY",
     description: "Les meilleurs moments de BLFesport."
   }
-],,
+],
   staff: [
     { nickname: "Bifyud_", role: "Fondateur", avatar: "assets/Bifyud.png", bio: "Bifyud_ est le fondateur de la BLFesport et streamer sur Twitch !" }
   ],
