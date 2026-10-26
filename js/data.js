@@ -84,8 +84,25 @@ window.BLF_DATA = {
   }
 ],
   staff: [
-    { nickname: "Bifyud_", role: "Fondateur", avatar: "assets/Bifyud.png", bio: "Bifyud_ est le fondateur de la BLFesport et streamer sur Twitch !" }
-  ],
+  {
+    nickname: "Bifyud_",
+    role: "Fondateur",
+    avatar: "assets/Bifyud.png",
+    bio: "Fondateur de BLFesport et streamer."
+  },
+  {
+    nickname: "Zaiox_gaming",
+    role: "Gérant STAFF",
+    avatar: "",
+    bio: "Gérant STAFF de la BLFesport, fondateur de la Shadow Esport et streamer."
+  },
+  {
+    nickname: "Pseudo3",
+    role: "Graphiste",
+    avatar: "assets/staff3.png",
+    bio: "Création des visuels officiels de BLFesport."
+  }
+],
   partners: [
     { name: "Instant Gaming", description: "Instant Gaming × BLFesport : Envie de jouer à prix réduit ? Retrouvez vos jeux préférés sur Instant Gaming grâce à notre lien partenaire ! En passant par notre lien, vous soutenez également le développement de BLFesport et nos projets esports.", url: "https://www.instant-gaming.com/?igr=blfesportoff", logo: "assets/instant-gaming-serios-logo-2.png" }
   ],
