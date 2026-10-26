@@ -43,11 +43,11 @@ window.BLF_DATA = {
   game: "Rocket League",
   status: "Actif",
   accent: "silver",
-  description: "Le Roster B de BLFesport entre en compétition.",
+  description: "Le Roster B de BLFesport entre en compétition."
   players: [
-    { nickname: "berat_smnl", avatar: "assets/Berat.png", role: "Joueur", bio: "", stats: "", social: "" },
-    { nickname: "Foamy", avatar: "assets/Astr_.png", role: "Joueur", bio: "", stats: "", social: "https://www.tiktok.com/@foamy2151?_r=1&_t=ZN-9Asv964G0t4" },
-    { nickname: "Astr_", avatar: "assets/Foymi.png", role: "Joueur", bio: "", stats: "", social: "" }
+    { nickname: "berat_smnl", avatar: "assets/Berat.png", role: "Joueur", bio: "", stats: "stats: Grand Champion • 2v2 • Compétitif", social: "" },
+    { nickname: "Foamy", avatar: "assets/Astr_.png", role: "Joueur", bio: "", stats: "stats: Grand Champion • 2v2 • Compétitif", social: "https://www.tiktok.com/@foamy2151?_r=1&_t=ZN-9Asv964G0t4" },
+    { nickname: "Astr_", avatar: "assets/Foymi.png", role: "Joueur", bio: "", stats: "stats: Grand Champion • 2v2 • Compétitif", social: "" }
   ]
 },,
     { id: "roster-c", name: "Roster ACADEMIQUE", subtitle: "Projet compétitif", game: "Rocket League", status: "Composition à renseigner", accent: "dark", description: "Ce roster sera présenté lorsque ses informations seront confirmées.", players: [] }
