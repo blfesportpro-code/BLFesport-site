@@ -36,7 +36,20 @@ window.BLF_DATA = {
   ],
   rosters: [
     { id: "roster-a", name: "Roster A", subtitle: "Équipe compétitive principale", game: "Rocket League", status: "Composition à renseigner", accent: "violet", description: "La composition officielle et les objectifs du Roster A seront annoncés prochainement.", players: [] },
-    { id: "roster-b", name: "Roster B", subtitle: "Développement & compétition", game: "Rocket League", status: "Composition à renseigner", accent: "silver", description: "Un espace dédié aux joueurs en progression et aux compétitions à venir.", players: [] },
+{
+  id: "roster-b",
+  name: "Roster B",
+  subtitle: "Développement & compétition",
+  game: "Rocket League",
+  status: "Actif",
+  accent: "silver",
+  description: "Le Roster B de BLFesport entre en compétition.",
+  players: [
+    { nickname: "berat_smnl", avatar: "", role: "Joueur", bio: "", stats: "", social: "" },
+    { nickname: "Foamy", avatar: "", role: "Joueur", bio: "", stats: "", social: "" },
+    { nickname: "Astr_", avatar: "", role: "Joueur", bio: "", stats: "", social: "" }
+  ]
+},,
     { id: "roster-c", name: "Roster C", subtitle: "Projet compétitif", game: "Rocket League", status: "Composition à renseigner", accent: "dark", description: "Ce roster sera présenté lorsque ses informations seront confirmées.", players: [] }
   ],
   matches: [
