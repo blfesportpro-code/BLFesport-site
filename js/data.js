@@ -30,8 +30,8 @@ window.BLF_DATA = {
       category: "Équipes",
       important: false,
       image: "",
-      description: "Les compositions, rôles et profils des joueurs du roster B seront publiés ici dès leur confirmation officielle.",
-      label: "À venir"
+      description: "Les compositions, rôles et profils des joueurs du roster B sont désormais disponible !",
+      label: "Enfin disponible !"
     }
   ],
   rosters: [
