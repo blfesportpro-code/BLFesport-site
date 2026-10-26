@@ -25,12 +25,12 @@ window.BLF_DATA = {
     },
     {
       id: "rosters",
-      title: "Les rosters arrivent",
-      date: "2026-10-23",
+      title: "Le roster B est arrivé !",
+      date: "2026-10-26",
       category: "Équipes",
       important: false,
       image: "",
-      description: "Les compositions, rôles et profils des joueurs seront publiés ici dès leur confirmation officielle.",
+      description: "Les compositions, rôles et profils des joueurs du roster B seront publiés ici dès leur confirmation officielle.",
       label: "À venir"
     }
   ],
