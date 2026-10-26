@@ -53,9 +53,19 @@ window.BLF_DATA = {
     { id: "roster-c", name: "Roster ACADEMIQUE", subtitle: "Projet compétitif", game: "Rocket League", status: "Composition à renseigner", accent: "dark", description: "Ce roster sera présenté lorsque ses informations seront confirmées.", players: [] }
   ],
   matches: [
-    /* Exemple désactivé : renseignez date au format ISO local, adversaire et compétition, puis passez example à false. */
-    { id: "match-example", date: "", roster: "Roster A", opponent: "Adversaire à renseigner", competition: "Compétition à renseigner", format: "BO5", streamUrl: "", status: "upcoming", result: "", example: true }
-  ],
+  {
+    id: "match-1",
+    date: "2026-11-05T20:00:00",
+    roster: "Roster B",
+    opponent: "Nom de l'équipe adverse",
+    competition: "Tournoi Rocket League",
+    format: "BO5",
+    streamUrl: "",
+    status: "upcoming",
+    result: "",
+    example: false
+  }
+],
   seasonStats: [
     { label: "Matchs joués", value: "—" },
     { label: "Victoires", value: "—" },
