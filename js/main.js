@@ -126,14 +126,15 @@
           </div>
         </article>
       `;
-   } catch (error) {
-  console.error("Erreur YouTube BLFesport :", error);
-  host.innerHTML = empty(
-    "Erreur YouTube : " + error.message
-  );
-}
+
+    } catch (error) {
+      console.error("Erreur YouTube BLFesport :", error);
+      host.innerHTML = empty(
+        "Erreur YouTube : " + error.message
+      );
     }
   }
+
   function renderStaff() {
     const host=$("#staffGrid");if(!host)return;const items=data.staff||[];
     host.innerHTML=items.length?items.map(s=>`<article class="staff-card"><div class="staff-avatar">${s.avatar?`<img loading="lazy" src="${esc(s.avatar)}" alt="">`:esc(initials(s.nickname))}</div><div><h3>${esc(s.nickname||"Pseudo à renseigner")}</h3><small>${esc(s.role||"Fonction à renseigner")}</small><p>${esc(s.bio||"Présentation à venir.")}</p></div></article>`).join(""):empty("Les responsables seront présentés ici.");
