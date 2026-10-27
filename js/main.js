@@ -20,9 +20,12 @@
   const initials = value => (String(value || "BLF").trim().split(/\s+/).slice(0,2).map(s=>s[0]||"").join("").toUpperCase() || "BLF");
   const empty = (message) => `<div class="empty-state">${esc(message)}</div>`;
 
-  function renderNews() {
+
+function renderNews() {
   const host = $("#newsGrid");
   if (!host) return;
+
+  const CACHE_KEY = "blfesport_discord_announcements_v1";
 
   const render = items => {
     const sorted = [...items]
@@ -36,49 +39,97 @@
       ? sorted.map(item => `
         <article class="news-card">
           <div class="news-meta">
-            <span class="category-pill">${esc(item.category || "Annonce")}</span>
+            <span class="category-pill">${esc(item.category || "Discord")}</span>
             ${item.important ? '<span class="important-pill">✦ PRIORITAIRE</span>' : ""}
           </div>
           <h3>${esc(item.title || "Annonce BLFesport")}</h3>
           <p>${esc(item.description || "")}</p>
           <div class="news-bottom">
-            <span>${esc(item.date ? formatDate(item.date) : "")}</span>
+            <span>${esc(item.date ? formatDate(item.date) : "Date à annoncer")}</span>
             <span class="news-arrow">↗</span>
           </div>
         </article>
       `).join("")
-      : empty("Aucune annonce pour le moment. Revenez bientôt.");
+      : empty("Aucune annonce disponible pour le moment.");
   };
 
-  render(data.announcements || []);
+  const normalize = items => items.map(item => ({
+    title: item.title || item.name || "Annonce Discord",
+    description: item.description || item.content || item.message || "",
+    date: item.date || item.posted_at || item.created_at || item.timestamp || "",
+    category: item.category || "Discord",
+    important: Boolean(item.important)
+  }));
 
-  fetch("https://api.dispresso.co/api/espresso/servers/1305208753150365697/site-feed")
+  let cached = [];
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(CACHE_KEY) || "[]");
+    if (Array.isArray(saved)) cached = saved;
+  } catch (error) {
+    console.warn("Cache des annonces indisponible.", error);
+  }
+
+  const localAnnouncements = Array.isArray(data.announcements)
+    ? data.announcements
+    : [];
+
+  // Affiche immédiatement les dernières annonces disponibles.
+  render(cached.length ? cached : localAnnouncements);
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12000);
+
+  fetch("https://api.dispresso.co/api/espresso/servers/1305208753150365697/site-feed", {
+    signal: controller.signal,
+    cache: "no-store"
+  })
     .then(response => {
-      if (!response.ok) throw new Error("Flux Dispresso indisponible");
+      if (!response.ok) {
+        throw new Error("Flux Dispresso indisponible : " + response.status);
+      }
       return response.json();
     })
     .then(feed => {
-      const announcements = feed.announcements || feed.data?.announcements;
+      const announcements =
+        feed.announcements ||
+        feed.data?.announcements;
 
-      if (!Array.isArray(announcements) || !announcements.length) return;
+      if (!Array.isArray(announcements) || !announcements.length) {
+        throw new Error("Aucune annonce exploitable dans le flux.");
+      }
 
-      const items = announcements.map(item => ({
-        title: item.title || item.name || "Annonce Discord",
-        description: item.description || item.content || item.message || "",
-        date: item.date || item.created_at || item.timestamp || "",
-        category: item.category || "Discord",
-        important: Boolean(item.important)
-      }));
+      const items = normalize(announcements);
+
+      // Ne remplace pas les annonces visibles par du contenu vide.
+      if (!items.some(item => item.title || item.description)) {
+        throw new Error("Le flux ne contient aucune annonce exploitable.");
+      }
 
       render(items);
+
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(items));
+      } catch (error) {
+        console.warn("Impossible de sauvegarder les annonces.", error);
+      }
     })
     .catch(error => {
-      console.info("Flux Dispresso indisponible : annonces locales conservées.", error);
-    });
+      console.warn(
+        "Flux Discord temporairement indisponible : conservation des annonces.",
+        error
+      );
+
+      // Les annonces déjà affichées restent visibles.
+      if (cached.length) {
+        render(cached);
+      } else {
+        render(localAnnouncements);
+      }
+    })
+    .finally(() => clearTimeout(timeout));
 }
-  function activeMatches() {
-    return (data.matches || []).filter(m=>!m.example && m.date && !Number.isNaN(new Date(m.date).getTime()));
-  }
+
   function renderMatches() {
     const matches = activeMatches().sort((a,b)=>new Date(a.date)-new Date(b.date));
     const upcoming = matches.filter(m=>m.status !== "finished" && new Date(m.date) >= new Date());
