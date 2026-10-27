@@ -67,14 +67,71 @@
       return `<article class="roster-card"><div class="roster-top"><div class="roster-emblem">BLF<span style="font-size:10px">${String.fromCharCode(65+i)}</span></div><span class="roster-game">${esc(r.game||"Jeu à renseigner")}</span></div><h3>${esc(r.name)}</h3><div class="roster-subtitle">${esc(r.subtitle||"Équipe BLFesport")}</div><p>${esc(r.description||"Présentation à venir.")}</p><span class="roster-status">${esc(r.status||"Informations à venir")}</span><div class="players-wrap"><h4>JOUEURS ${players.length ? `· ${players.length}` : "· À ANNONCER"}</h4>${players.length?players.map(p=>`<div class="player-chip"><div class="player-avatar">${p.avatar?`<img src="${esc(p.avatar)}" alt="">`:esc(initials(p.nickname))}</div><div><strong>${esc(p.nickname||"Pseudo à renseigner")}</strong><small>${esc(p.role||"Rôle à renseigner")}${p.bio?` · ${esc(p.bio)}`:""}</small>${p.stats?`<small>${esc(p.stats)}</small>`:""}${p.social?`<br><a class="text-link" href="${esc(validUrl(p.social))}" target="_blank" rel="noopener">Profil ↗</a>`:""}</div></div>`).join(""):empty("Aucun joueur annoncé officiellement.")}</div><div class="roster-foot">${esc(r.game||"Esport")} / BLFESPORT</div></article>`;
     }).join(""):empty("Les rosters seront présentés prochainement.");
   }
-  function renderVideos() {
-    const host=$("#videoGrid");if(!host)return;
-    const videos=data.videos||[];
-    host.innerHTML=videos.length?videos.slice(0,6).map(v=>{
-      const id=String(v.youtubeId||"").trim(), url=validUrl(v.url);
-      const thumb=id?`https://img.youtube.com/vi/${encodeURIComponent(id)}/hqdefault.jpg`:"";
-      return `<article class="video-card"><div class="video-thumb">${thumb?`<img loading="lazy" src="${esc(thumb)}" alt="">`:"▶"}</div><div class="video-body"><small>${esc(v.type||"VIDÉO")} · ${esc(formatDate(v.date))}</small><h4>${esc(v.title||"Vidéo BLFesport")}</h4><p>${esc(v.description||"Contenu BLFesport.")}</p>${id?`<a href="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}" target="_blank" rel="noopener">Ouvrir la vidéo ↗</a>`:url?`<a href="${esc(url)}" target="_blank" rel="noopener">Regarder ↗</a>`:"<span style='font-size:9px;color:#877a90'>Lien à renseigner</span>"}</div></article>`;
-    }).join(""):empty("Les clips, rediffusions et best-of apparaîtront ici. Ajoutez-les dans js/data.js.");
+    async function renderVideos() {
+    const host = $("#videoGrid");
+    if (!host) return;
+
+    // Remplace cette valeur par ta nouvelle clé API YouTube
+    const API_KEY = "COLLE_TA_NOUVELLE_CLE_API_ICI";
+    const HANDLE = "BLFesport";
+
+    host.innerHTML = empty("Chargement de la dernière vidéo de BLFesport…");
+
+    try {
+      const channelResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&forHandle=${encodeURIComponent(HANDLE)}&key=${encodeURIComponent(API_KEY)}`
+      );
+
+      const channel = await channelResponse.json();
+
+      if (!channelResponse.ok || !channel.items?.length) {
+        throw new Error("Chaîne YouTube introuvable ou accès API refusé.");
+      }
+
+      const uploads = channel.items[0].contentDetails.relatedPlaylists.uploads;
+
+      const videoResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${encodeURIComponent(uploads)}&maxResults=1&key=${encodeURIComponent(API_KEY)}`
+      );
+
+      const result = await videoResponse.json();
+
+      if (!videoResponse.ok || !result.items?.length) {
+        throw new Error("Aucune vidéo trouvée ou accès API refusé.");
+      }
+
+      const video = result.items[0].snippet;
+      const id = result.items[0].contentDetails?.videoId
+        || video.resourceId?.videoId;
+
+      if (!id) throw new Error("Identifiant vidéo introuvable.");
+
+      host.innerHTML = `
+        <article class="video-card">
+          <a class="video-thumb"
+             href="https://www.youtube.com/watch?v=${encodeURIComponent(id)}"
+             target="_blank" rel="noopener noreferrer">
+            <img loading="lazy"
+                 src="https://img.youtube.com/vi/${encodeURIComponent(id)}/hqdefault.jpg"
+                 alt="${esc(video.title)}">
+          </a>
+          <div class="video-body">
+            <small>DERNIÈRE PUBLICATION · ${esc(formatDate(video.publishedAt))}</small>
+            <h4>${esc(video.title)}</h4>
+            <p>La dernière vidéo publiée sur la chaîne YouTube officielle de BLFesport.</p>
+            <a href="https://www.youtube.com/watch?v=${encodeURIComponent(id)}"
+               target="_blank" rel="noopener noreferrer">
+              Regarder la vidéo ↗
+            </a>
+          </div>
+        </article>
+      `;
+    } catch (error) {
+      console.error("Erreur YouTube BLFesport :", error);
+      host.innerHTML = empty(
+        "Impossible de charger la dernière vidéo pour le moment."
+      );
+    }
   }
   function renderStaff() {
     const host=$("#staffGrid");if(!host)return;const items=data.staff||[];
