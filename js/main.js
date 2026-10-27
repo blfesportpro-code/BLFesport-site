@@ -50,7 +50,7 @@
       : empty("Aucune annonce pour le moment. Revenez bientôt.");
   };
 
-  render(data.announcements || []);
+  render([]);
 
   fetch("https://api.dispresso.co/api/espresso/servers/1305208753150365697/site-feed")
     .then(response => {
