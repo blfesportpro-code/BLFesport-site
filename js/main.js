@@ -263,7 +263,10 @@ function renderMatches() {
   }
   function setup() {
     if(data.site){const tag=$("#heroTagline"),desc=$("#heroDescription");if(tag)tag.textContent=data.site.tagline||"L'ambition. La précision. La victoire.";if(desc)desc.textContent=data.site.description||"";document.title=`${data.site.name||"BLFesport"} — Organisation esport`;}
-    $("#year").textContent=new Date().getFullYear();
+    
+const year = $("#year");
+if (year) year.textContent = new Date().getFullYear();
+
     renderNews();renderMatches();renderRosters();renderVideos();renderStaff();renderPartners();renderShop();renderSocial();
     setInterval(updateCountdown,1000);
     const toggle=$("#menuToggle"),nav=$("#mainNav");
