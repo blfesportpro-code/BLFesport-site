@@ -110,37 +110,3 @@
   }
   document.addEventListener("DOMContentLoaded",setup);
 })();
-const API_KEY = "AIzaSyDQ_GAkSShJp7e0aXa8A6tZFEqxZcM7zlA";
-const HANDLE = "@BLFesport";
-
-async function loadLatestVideo() {
-  try {
-    const channel = await fetch(
-      `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&forHandle=${HANDLE.replace("@","")}&key=${API_KEY}`
-    ).then(r => r.json());
-
-    const uploads = channel.items[0].contentDetails.relatedPlaylists.uploads;
-
-    const videos = await fetch(
-      `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploads}&maxResults=1&key=${API_KEY}`
-    ).then(r => r.json());
-
-    const video = videos.items[0].snippet;
-    const id = video.resourceId.videoId;
-
-    document.getElementById("latest-video").innerHTML = `
-      <iframe
-        src="https://www.youtube.com/embed/${id}"
-        allowfullscreen
-        loading="lazy">
-      </iframe>
-
-      <h3>${video.title}</h3>
-      <p>${new Date(video.publishedAt).toLocaleDateString("fr-FR")}</p>
-    `;
-  } catch (e) {
-    console.error(e);
-  }
-}
-
-loadLatestVideo();
