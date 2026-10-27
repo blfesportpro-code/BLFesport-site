@@ -55,7 +55,7 @@ window.BLF_DATA = {
   matches: [
   {
     id: "match-1",
-    date: "2026-11-05T20:00:00",
+    date: "2026-10-27T23:20:00",
     roster: "Roster B",
     opponent: "Nom de l'équipe adverse",
     competition: "Tournoi Rocket League",
