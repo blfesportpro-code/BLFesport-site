@@ -72,7 +72,7 @@
     if (!host) return;
 
     // Remplace cette valeur par ta nouvelle clé API YouTube
-    const API_KEY = "AIzaSyB654mEPGLjeMihY84DNczFLpksta-hlv0";
+    const API_KEY = "AIzaSyAIStdSHRpi2-I7sfVDad21bptUrVI-IDg";
     const HANDLE = "BLFesport";
 
     host.innerHTML = empty("Chargement de la dernière vidéo de BLFesport…");
