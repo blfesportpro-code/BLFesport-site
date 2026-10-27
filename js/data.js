@@ -15,13 +15,13 @@ window.BLF_DATA = {
   announcements: [
     {
       id: "welcome",
-      title: "Bienvenue sur le site officiel",
-      date: "2026-10-23",
+      title: "Problème avec les annonces Discord !",
+      date: "2026-10-27",
       category: "Organisation",
       important: true,
       image: "",
-      description: "Le site officiel de BLFesport centralise nos équipes, nos actualités et nos rendez-vous compétitifs. Les informations seront mises à jour au fil des annonces.",
-      label: "Annonce de lancement"
+      description: "Le système d'annonce relié à Discord est surement en cours de ralancement ou à un petit soucis, n'hésite pas à revenir dans 2-3min !",
+      label: "Annonce d'erreur"
     },
     {
       id: "rosters",
