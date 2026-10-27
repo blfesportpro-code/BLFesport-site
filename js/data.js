@@ -24,13 +24,13 @@ window.BLF_DATA = {
       label: "Annonce d'erreur"
     },
     {
-      id: "rosters",
-      title: "Le roster B est arrivé !",
-      date: "2026-10-26",
-      category: "Équipes",
+      id: "Bienvenue",
+      title: "Le système d'annonce est activé !",
+      date: "2026-10-27",
+      category: "Organisation",
       important: false,
       image: "",
-      description: "Les compositions, rôles et profils des joueurs du roster B sont désormais disponible !",
+      description: "Un sistème d'annonce relié à Discord est désormais disponible !",
       label: "Enfin disponible !"
     }
   ],
