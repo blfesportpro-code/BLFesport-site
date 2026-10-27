@@ -135,9 +135,7 @@ function activeMatches() {
 
 function renderMatches() {
   const matches = activeMatches().sort((a,b) => new Date(a.date)-new Date(b.date));
-}
-    const upcoming = matches.filter(m=>m.status !== "finished" && new Date(m.date) >= new Date());
-    const next = upcoming[0];
+  const upcoming = matches.filter(m=>m.status !== "finished" && new Date(m.date) >= new Date());
     const host = $("#nextMatch");
     if (host) {
       if (!next) host.innerHTML = `<div><span class="match-kicker">PROCHAIN RENDEZ-VOUS</span><h3 class="match-title">LE PROCHAIN MATCH SE PRÉPARE.</h3><p class="match-note">Aucun match confirmé pour le moment. Les informations seront publiées ici dès qu'elles seront disponibles.</p></div><div class="countdown-wrap"><div class="countdown-label">COMPTE À REBOURS</div><div class="countdown"><div class="countdown-unit"><strong>—</strong><small>JOURS</small></div><div class="countdown-unit"><strong>—</strong><small>HEURES</small></div><div class="countdown-unit"><strong>—</strong><small>MIN</small></div></div><div class="match-note">En attente d'une date confirmée</div></div>`;
