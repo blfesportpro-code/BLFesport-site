@@ -85,8 +85,12 @@
       const channel = await channelResponse.json();
 
       if (!channelResponse.ok || !channel.items?.length) {
-        throw new Error("Chaîne YouTube introuvable ou accès API refusé.");
-      }
+  throw new Error(
+    channel.error?.message ||
+    JSON.stringify(channel.error) ||
+    "Aucune chaîne trouvée pour ce handle."
+  );
+}
 
       const uploads = channel.items[0].contentDetails.relatedPlaylists.uploads;
 
