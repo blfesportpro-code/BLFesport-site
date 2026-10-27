@@ -21,15 +21,61 @@
   const empty = (message) => `<div class="empty-state">${esc(message)}</div>`;
 
   function renderNews() {
-    const host = $("#newsGrid"); if (!host) return;
-    const items = [...(data.announcements || [])].sort((a,b)=>Number(Boolean(b.important))-Number(Boolean(a.important)) || String(b.date).localeCompare(String(a.date))).slice(0,3);
-    host.innerHTML = items.length ? items.map(item=>`
-      <article class="news-card">
-        <div class="news-meta"><span class="category-pill">${esc(item.category || "Annonce")}</span>${item.important ? '<span class="important-pill">✦ PRIORITAIRE</span>' : ""}</div>
-        <h3>${esc(item.title)}</h3><p>${esc(item.description)}</p>
-        <div class="news-bottom"><span>${esc(formatDate(item.date))}</span><span class="news-arrow">↗</span></div>
-      </article>`).join("") : empty("Aucune annonce pour le moment. Revenez bientôt.");
-  }
+  const host = $("#newsGrid");
+  if (!host) return;
+
+  const render = items => {
+    const sorted = [...items]
+      .sort((a, b) =>
+        Number(Boolean(b.important)) - Number(Boolean(a.important)) ||
+        String(b.date || "").localeCompare(String(a.date || ""))
+      )
+      .slice(0, 3);
+
+    host.innerHTML = sorted.length
+      ? sorted.map(item => `
+        <article class="news-card">
+          <div class="news-meta">
+            <span class="category-pill">${esc(item.category || "Annonce")}</span>
+            ${item.important ? '<span class="important-pill">✦ PRIORITAIRE</span>' : ""}
+          </div>
+          <h3>${esc(item.title || "Annonce BLFesport")}</h3>
+          <p>${esc(item.description || "")}</p>
+          <div class="news-bottom">
+            <span>${esc(item.date ? formatDate(item.date) : "")}</span>
+            <span class="news-arrow">↗</span>
+          </div>
+        </article>
+      `).join("")
+      : empty("Aucune annonce pour le moment. Revenez bientôt.");
+  };
+
+  render(data.announcements || []);
+
+  fetch("https://api.dispresso.co/api/espresso/servers/1305208753150365697/site-feed")
+    .then(response => {
+      if (!response.ok) throw new Error("Flux Dispresso indisponible");
+      return response.json();
+    })
+    .then(feed => {
+      const announcements = feed.announcements || feed.data?.announcements;
+
+      if (!Array.isArray(announcements) || !announcements.length) return;
+
+      const items = announcements.map(item => ({
+        title: item.title || item.name || "Annonce Discord",
+        description: item.description || item.content || item.message || "",
+        date: item.date || item.created_at || item.timestamp || "",
+        category: item.category || "Discord",
+        important: Boolean(item.important)
+      }));
+
+      render(items);
+    })
+    .catch(error => {
+      console.info("Flux Dispresso indisponible : annonces locales conservées.", error);
+    });
+}
   function activeMatches() {
     return (data.matches || []).filter(m=>!m.example && m.date && !Number.isNaN(new Date(m.date).getTime()));
   }
