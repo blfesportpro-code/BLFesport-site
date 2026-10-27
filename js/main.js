@@ -129,9 +129,13 @@ function renderNews() {
     })
     .finally(() => clearTimeout(timeout));
 }
+function activeMatches() {
+  return (data.matches || []).filter(match => !match.example);
+}
 
-  function renderMatches() {
-    const matches = activeMatches().sort((a,b)=>new Date(a.date)-new Date(b.date));
+function renderMatches() {
+  const matches = activeMatches().sort((a,b) => new Date(a.date)-new Date(b.date));
+}
     const upcoming = matches.filter(m=>m.status !== "finished" && new Date(m.date) >= new Date());
     const next = upcoming[0];
     const host = $("#nextMatch");
