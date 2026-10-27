@@ -126,11 +126,12 @@
           </div>
         </article>
       `;
-    } catch (error) {
-      console.error("Erreur YouTube BLFesport :", error);
-      host.innerHTML = empty(
-        "Impossible de charger la dernière vidéo pour le moment."
-      );
+   } catch (error) {
+  console.error("Erreur YouTube BLFesport :", error);
+  host.innerHTML = empty(
+    "Erreur YouTube : " + error.message
+  );
+}
     }
   }
   function renderStaff() {
