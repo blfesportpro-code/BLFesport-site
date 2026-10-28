@@ -129,9 +129,63 @@ function renderNews() {
     })
     .finally(() => clearTimeout(timeout));
 }
+
+let discordMatches = null;
+
 function activeMatches() {
-  return (data.matches || []).filter(match => !match.example);
+  const matches = discordMatches !== null
+    ? discordMatches
+    : (data.matches || []).filter(match => !match.example);
+
+  return matches.filter(match => !match.example);
 }
+
+async function loadDiscordEvents() {
+  try {
+    const response = await fetch(
+      "https://blfesport-discord.enzo-reuziault.workers.dev/",
+      { cache: "no-store" }
+    );
+
+    if (!response.ok) {
+      throw new Error("Erreur Worker : " + response.status);
+    }
+
+    const events = await response.json();
+
+    if (!Array.isArray(events)) {
+      throw new Error("Réponse Discord invalide.");
+    }
+
+    const now = Date.now();
+
+    discordMatches = events
+      .filter(event =>
+        event.status === 1 &&
+        event.scheduled_start_time &&
+        new Date(event.scheduled_start_time).getTime() >= now
+      )
+      .map(event => ({
+        id: "discord-" + event.id,
+        date: event.scheduled_start_time,
+        opponent: event.name,
+        competition: "Événement Discord",
+        format: "Événement officiel",
+        roster: "BLFesport",
+        streamUrl: "",
+        status: "upcoming",
+        result: "",
+        example: false,
+        isDiscordEvent: true
+      }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    renderMatches();
+  } catch (error) {
+    console.error("Synchronisation Discord impossible :", error);
+  }
+}
+
 
 function renderMatches() {
   const matches = activeMatches().sort((a,b) => new Date(a.date)-new Date(b.date));
