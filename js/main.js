@@ -172,7 +172,7 @@ function renderMatches() {
     if (!host) return;
 
     // Remplace cette valeur par ta nouvelle clé API YouTube
-    const API_KEY = "AIzaSyAIStdSHRpi2-I7sfVDad21bptUrVI-IDg";
+    const API_KEY = "AIzaSyD8xrem1cDT_OW2-nADBKsP8Xj5FUiIlqc";
     const HANDLE = "@BLFesport";
 
     host.innerHTML = empty("Chargement de la dernière vidéo de BLFesport…");
