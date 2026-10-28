@@ -133,11 +133,14 @@ function renderNews() {
 let discordMatches = null;
 
 function activeMatches() {
-  const matches = discordMatches !== null
-    ? discordMatches
-    : (data.matches || []).filter(match => !match.example);
+  const localMatches = (data.matches || [])
+    .filter(match => !match.example);
 
-  return matches.filter(match => !match.example);
+  if (discordMatches === null || discordMatches.length === 0) {
+    return localMatches;
+  }
+
+  return discordMatches.filter(match => !match.example);
 }
 
 async function loadDiscordEvents() {
