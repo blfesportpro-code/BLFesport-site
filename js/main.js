@@ -321,7 +321,7 @@ function renderMatches() {
 const year = $("#year");
 if (year) year.textContent = new Date().getFullYear();
 
-    renderNews();renderMatches();renderRosters();renderVideos();renderStaff();renderPartners();renderShop();renderSocial();
+    renderNews();renderMatches();loadDiscordEvents();renderRosters();renderVideos();renderStaff();renderPartners();renderShop();renderSocial();
     setInterval(updateCountdown,1000);
     const toggle=$("#menuToggle"),nav=$("#mainNav");
     toggle?.addEventListener("click",()=>{const open=nav.classList.toggle("open");toggle.setAttribute("aria-expanded",String(open));toggle.setAttribute("aria-label",open?"Fermer le menu":"Ouvrir le menu")});
