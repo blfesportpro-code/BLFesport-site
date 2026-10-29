@@ -216,14 +216,132 @@ function renderMatches() {
       Object.entries(values).forEach(([key,val])=>{const node=el.querySelector(`[data-${key}]`);if(node)node.textContent=String(val).padStart(2,"0")});
     });
   }
-  function renderRosters() {
-    const host=$("#rosterGrid"); if(!host)return;
-    const rosters=data.rosters||[];
-    host.innerHTML=rosters.length?rosters.map((r,i)=>{
-      const players=r.players||[];
-      return `<article class="roster-card"><div class="roster-top"><div class="roster-emblem">BLF<span style="font-size:10px">${String.fromCharCode(65+i)}</span></div><span class="roster-game">${esc(r.game||"Jeu à renseigner")}</span></div><h3>${esc(r.name)}</h3><div class="roster-subtitle">${esc(r.subtitle||"Équipe BLFesport")}</div><p>${esc(r.description||"Présentation à venir.")}</p><span class="roster-status">${esc(r.status||"Informations à venir")}</span><div class="players-wrap"><h4>JOUEURS ${players.length ? `· ${players.length}` : "· À ANNONCER"}</h4>${players.length?players.map(p=>`<div class="player-chip"><div class="player-avatar">${p.avatar?`<img src="${esc(p.avatar)}" alt="">`:esc(initials(p.nickname))}</div><div><strong>${esc(p.nickname||"Pseudo à renseigner")}</strong><small>${esc(p.role||"Rôle à renseigner")}${p.bio?` · ${esc(p.bio)}`:""}</small>${p.stats?`<small>${esc(p.stats)}</small>`:""}${p.social?`<br><a class="text-link" href="${esc(validUrl(p.social))}" target="_blank" rel="noopener">Profil ↗</a>`:""}</div></div>`).join(""):empty("Aucun joueur annoncé officiellement.")}</div><div class="roster-foot">${esc(r.game||"Esport")} / BLFESPORT</div></article>`;
-    }).join(""):empty("Les rosters seront présentés prochainement.");
+  async function renderRosters() {
+  const host = $("#rosterGrid");
+  if (!host) return;
+
+  const rosterNames = ["ROSTER A", "ROSTER B", "ROSTER C"];
+  const localRosters = data.rosters || [];
+
+  host.innerHTML = empty("Chargement des équipes BLFesport…");
+
+  try {
+    const response = await fetch(
+      "https://blfesport-rosters.enzo-reuziault.workers.dev/",
+      { cache: "no-store" }
+    );
+
+    if (!response.ok) {
+      throw new Error("Erreur Worker : " + response.status);
+    }
+
+    const result = await response.json();
+
+    if (!Array.isArray(result.players)) {
+      throw new Error("Données des joueurs invalides.");
+    }
+
+    host.innerHTML = rosterNames.map((rosterName, i) => {
+      const r = localRosters[i] || {};
+      const players = result.players
+        .filter(p => p.roster === rosterName);
+
+      return `
+        <article class="roster-card">
+          <div class="roster-top">
+            <div class="roster-emblem">
+              BLF<span style="font-size:10px">${String.fromCharCode(65 + i)}</span>
+            </div>
+            <span class="roster-game">${esc(r.game || "Rocket League")}</span>
+          </div>
+
+          <h3>${esc(rosterName)}</h3>
+          <div class="roster-subtitle">
+            ${esc(r.subtitle || "Équipe BLFesport")}
+          </div>
+
+          <p>${esc(r.description || "Roster officiel de BLFesport.")}</p>
+
+          <span class="roster-status">
+            ${players.length ? "ROSTER ACTIF" : "RECRUTEMENT / À ANNONCER"}
+          </span>
+
+          <div class="players-wrap">
+            <h4>JOUEURS · ${players.length}</h4>
+
+            ${
+              players.length
+                ? players.map(p => `
+                    <div class="player-chip">
+                      <div class="player-avatar">
+                        ${
+                          p.avatar
+                            ? `<img loading="lazy" src="${esc(p.avatar)}" alt="Avatar de ${esc(p.displayName)}">`
+                            : esc(initials(p.displayName))
+                        }
+                      </div>
+                      <div>
+                        <strong>${esc(p.displayName || p.username)}</strong>
+                        <small>@${esc(p.username || "")}</small>
+                      </div>
+                    </div>
+                  `).join("")
+                : empty("Aucun joueur annoncé officiellement.")
+            }
+          </div>
+
+          <div class="roster-foot">
+            ${esc(r.game || "Rocket League")} / BLFESPORT
+          </div>
+        </article>
+      `;
+    }).join("");
+
+  } catch (error) {
+    console.error("Synchronisation des rosters impossible :", error);
+
+    // En cas de problème réseau, conserve les équipes locales.
+    host.innerHTML = localRosters.length
+      ? localRosters.map((r, i) => {
+          const players = r.players || [];
+
+          return `
+            <article class="roster-card">
+              <div class="roster-top">
+                <div class="roster-emblem">
+                  BLF<span style="font-size:10px">${String.fromCharCode(65 + i)}</span>
+                </div>
+                <span class="roster-game">${esc(r.game || "Jeu à renseigner")}</span>
+              </div>
+              <h3>${esc(r.name || rosterNames[i] || "Roster")}</h3>
+              <div class="roster-subtitle">${esc(r.subtitle || "Équipe BLFesport")}</div>
+              <p>${esc(r.description || "Présentation à venir.")}</p>
+              <span class="roster-status">${esc(r.status || "Informations à venir")}</span>
+              <div class="players-wrap">
+                <h4>JOUEURS · ${players.length}</h4>
+                ${
+                  players.length
+                    ? players.map(p => `
+                        <div class="player-chip">
+                          <div class="player-avatar">
+                            ${p.avatar ? `<img src="${esc(p.avatar)}" alt="">` : esc(initials(p.nickname))}
+                          </div>
+                          <div>
+                            <strong>${esc(p.nickname || "Pseudo à renseigner")}</strong>
+                            <small>${esc(p.role || "Joueur")}</small>
+                          </div>
+                        </div>
+                      `).join("")
+                    : empty("Impossible de charger les joueurs Discord.")
+                }
+              </div>
+              <div class="roster-foot">${esc(r.game || "Esport")} / BLFESPORT</div>
+            </article>
+          `;
+        }).join("")
+      : empty("Impossible de charger les rosters pour le moment.");
   }
+}
     async function renderVideos() {
     const host = $("#videoGrid");
     if (!host) return;
