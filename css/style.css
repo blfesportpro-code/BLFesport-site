@@ -394,3 +394,22 @@ section,
     display: none;
   }
 }
+
+/* TEST : supprimer les débordements décoratifs */
+.ambient {
+  display: none !important;
+}
+
+.hero-visual {
+  overflow: hidden;
+}
+
+.hero {
+  min-width: 0;
+}
+
+.section-wrap,
+.supporters-container {
+  width: 100%;
+  max-width: 100%;
+}
