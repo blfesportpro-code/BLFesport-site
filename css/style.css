@@ -339,91 +339,16 @@ html {
    CORRECTION RESPONSIVE - BLFESPORT
 ========================================= */
 
-html {
-  width: 100%;
-  min-width: 0;
-  overflow-x: clip;
-}
+/* CORRECTION DEBORDEMENT MOBILE BLFESPORT */
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-body {
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
-  margin: 0;
-  overflow-x: clip;
-}
-
-img,
-video,
-iframe {
-  max-width: 100%;
-}
-
-/* Les grands conteneurs ne doivent pas
-   dépasser la largeur disponible */
-
-.container,
-section,
-main,
-header,
-footer {
-  max-width: 100%;
-}
-
-/* Les grilles doivent pouvoir se réorganiser */
-
-.rosters-grid,
-.teams-grid,
-.news-grid,
-.media-grid,
-.partners-grid,
-.supporters-grid {
-  grid-template-columns:
-    repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-}
-
-/* Adaptation aux petits écrans */
-
-@media (max-width: 768px) {
-  .container,
-  .rosters-container,
-  .teams-container,
-  .news-container,
-  .media-container,
-  .supporters-container {
-    width: 100%;
-    max-width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .rosters-grid,
-  .teams-grid,
-  .news-grid,
-  .media-grid,
-  .partners-grid,
-  .supporters-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-
-/* Empêcher la page de glisser horizontalement */
 html,
 body {
   width: 100%;
   max-width: 100%;
   margin: 0;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
-/* Éviter que les éléments dépassent l'écran */
 *,
 *::before,
 *::after {
@@ -436,14 +361,36 @@ iframe {
   max-width: 100%;
 }
 
-.supporter-unavailable {
-  width: 100%;
-  opacity: 0.55;
-  cursor: not-allowed;
-  pointer-events: none;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(180, 160, 200, 0.25);
-  color: #aaa2b5;
-  box-shadow: none;
-  user-select: none;
+main,
+section,
+.site-header,
+.site-footer {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.hero,
+.hero-visual,
+.hero-copy {
+  min-width: 0;
+}
+
+@media (max-width: 760px) {
+  .hero-visual {
+    width: 100%;
+    overflow: clip;
+  }
+
+  .hero-orbit,
+  .hero-grid {
+    max-width: 100%;
+  }
+
+  .tag-top {
+    right: 8px;
+  }
+
+  .hero-vertical {
+    display: none;
+  }
 }
