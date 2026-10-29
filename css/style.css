@@ -400,3 +400,26 @@ footer {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+
+/* Empêcher la page de glisser horizontalement */
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+/* Éviter que les éléments dépassent l'écran */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+img,
+video,
+iframe {
+  max-width: 100%;
+}
