@@ -321,3 +321,82 @@
     box-sizing: border-box;
   }
 }
+
+
+/* =========================================
+   CORRECTION RESPONSIVE - BLFESPORT
+========================================= */
+
+html {
+  width: 100%;
+  min-width: 0;
+  overflow-x: clip;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  overflow-x: clip;
+}
+
+img,
+video,
+iframe {
+  max-width: 100%;
+}
+
+/* Les grands conteneurs ne doivent pas
+   dépasser la largeur disponible */
+
+.container,
+section,
+main,
+header,
+footer {
+  max-width: 100%;
+}
+
+/* Les grilles doivent pouvoir se réorganiser */
+
+.rosters-grid,
+.teams-grid,
+.news-grid,
+.media-grid,
+.partners-grid,
+.supporters-grid {
+  grid-template-columns:
+    repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+
+/* Adaptation aux petits écrans */
+
+@media (max-width: 768px) {
+  .container,
+  .rosters-container,
+  .teams-container,
+  .news-container,
+  .media-container,
+  .supporters-container {
+    width: 100%;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .rosters-grid,
+  .teams-grid,
+  .news-grid,
+  .media-grid,
+  .partners-grid,
+  .supporters-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
