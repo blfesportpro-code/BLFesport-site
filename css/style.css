@@ -15,3 +15,80 @@
 @media(max-width:1000px){.main-nav{gap:15px}.main-nav>a{font-size:10px}.hero{min-height:560px}.hero-visual{height:400px}.hero-vertical{display:none}.community-panel{grid-template-columns:75px 1fr}.community-sigil{width:70px;height:70px}.community-actions{grid-column:2;flex-direction:row;flex-wrap:wrap}.roster-grid{gap:12px}.roster-card{padding:18px}}
 @media(max-width:760px){.section-wrap{width:min(100% - 32px,var(--max))}.site-header{height:70px;padding:0 16px}.brand{font-size:24px}.brand img{width:43px;height:43px}.menu-toggle{display:block;z-index:52}.main-nav{display:none;position:absolute;top:69px;left:0;right:0;padding:18px 20px 24px;background:#100c16;border-bottom:1px solid var(--line);flex-direction:column;align-items:stretch;gap:0}.main-nav.open{display:flex}.main-nav>a{font-size:12px;padding:13px 5px;border-bottom:1px solid #ffffff0a}.main-nav .nav-cta{margin-top:12px;text-align:center;border:0}.hero{grid-template-columns:1fr;padding-top:54px;padding-bottom:78px;min-height:unset}.hero h1{font-size:clamp(65px,18vw,100px)}.hero-visual{height:350px;grid-row:1;margin-bottom:15px}.hero-copy{grid-row:2}.hero-logo-frame{width:min(68%,280px)}.tag-top{right:3%;top:7%}.tag-bottom{left:2%;bottom:7%}.hero-proof{margin-top:34px}.scroll-cue{bottom:20px}.section-block{padding-top:72px}.section-heading{align-items:start}.section-heading h2{font-size:39px}.section-index{padding-top:5px;font-size:7px}.news-grid,.roster-grid{grid-template-columns:1fr}.news-card{min-height:210px}.next-match{grid-template-columns:1fr;padding:24px}.countdown-wrap{text-align:left}.countdown{justify-content:flex-start}.countdown-unit{min-width:45px}.match-title{font-size:30px}.match-list{border-top:0}.match-row{grid-template-columns:76px 1fr auto;gap:9px;padding:14px 4px}.match-info{grid-column:2;grid-row:2}.match-status{grid-column:3;grid-row:1/3}.stats-row{grid-template-columns:repeat(2,1fr)}.stat-box:nth-child(2){border-right:0}.stat-box:nth-child(-n+2){border-bottom:1px solid var(--line)}.media-layout,.video-grid,.staff-grid{grid-template-columns:1fr}.media-card{min-height:245px}.video-grid{gap:12px}.staff-card{padding:16px}.partner-grid{grid-template-columns:repeat(2,1fr)}.shop-grid{grid-template-columns:1fr}.shop-card{grid-template-columns:115px 1fr}.shop-body{padding:15px}.shop-body h3{font-size:20px}.community-panel{grid-template-columns:1fr;padding:27px;gap:18px}.community-sigil{width:58px;height:58px;font-size:29px}.community h2{font-size:35px}.community-actions{grid-column:1;flex-direction:column}.community-actions .button{width:100%}.footer-main{flex-wrap:wrap}.footer-main p{order:3;flex-basis:100%}.footer-bottom{flex-wrap:wrap;line-height:1.7}.ticker-track{gap:25px}.ticker-track span{font-size:12px}}
 @media(max-width:390px){.hero-actions .button{width:100%;justify-content:space-between}.floating-tag{padding:9px}.floating-tag strong{font-size:9px}.section-heading h2{font-size:34px}.match-detail{gap:10px}.shop-card{grid-template-columns:95px 1fr}}
+
+.decal-section {
+  padding: 80px 20px;
+  background: radial-gradient(ellipse at center,
+    #241044 0%, #090811 65%, #050509 100%);
+  color: #fff;
+  text-align: center;
+  border-top: 1px solid #6925ad;
+}
+
+.decal-content {
+  max-width: 900px;
+  margin: auto;
+}
+
+.decal-tag {
+  color: #c58aff;
+  letter-spacing: 4px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.decal-section h2 {
+  font-size: clamp(36px, 7vw, 64px);
+  font-weight: 900;
+  font-style: italic;
+  margin: 15px 0;
+}
+
+.decal-section h2 span {
+  color: #923cff;
+}
+
+.decal-section p {
+  color: #c5c2d0;
+  line-height: 1.7;
+}
+
+.decal-preview {
+  margin: 35px auto 25px;
+  max-width: 650px;
+  padding: 20px;
+  border: 1px solid #6321a7;
+  border-radius: 18px;
+  background: rgba(15, 10, 28, .8);
+  box-shadow: 0 0 35px rgba(128, 35, 255, .18);
+}
+
+.decal-preview img {
+  display: block;
+  width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+}
+
+.decal-download {
+  display: inline-block;
+  padding: 17px 28px;
+  border-radius: 10px;
+  color: white;
+  text-decoration: none;
+  font-weight: 800;
+  background: linear-gradient(110deg, #6e14e8, #963dff);
+  border: 1px solid #b66aff;
+  transition: transform .2s, box-shadow .2s;
+}
+
+.decal-download:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 25px #7625d8;
+}
+
+.decal-content small {
+  display: block;
+  margin-top: 12px;
+  color: #a8a2b8;
+}
