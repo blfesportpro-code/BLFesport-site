@@ -92,3 +92,232 @@
   margin-top: 12px;
   color: #a8a2b8;
 }
+
+
+/* ==================================
+   ESPACE SUPPORTERS BLFESPORT
+================================== */
+
+.supporters-section {
+  position: relative;
+  overflow: hidden;
+  padding: 100px 24px;
+  color: #f5f3fa;
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(126, 54, 255, 0.19),
+      transparent 55%
+    ),
+    #08080d;
+}
+
+.supporters-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.supporters-header {
+  max-width: 750px;
+  margin: 0 auto 55px;
+  text-align: center;
+}
+
+.supporters-eyebrow {
+  display: inline-block;
+  color: #b58aff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 3px;
+}
+
+.supporters-header h2 {
+  margin: 16px 0;
+  font-size: clamp(32px, 5vw, 54px);
+  font-weight: 900;
+  letter-spacing: -1.5px;
+}
+
+.supporters-header h2 span {
+  color: #a56aff;
+}
+
+.supporters-header p,
+.supporter-card p,
+.supporters-community p {
+  color: #aaa7b8;
+  line-height: 1.8;
+  font-size: 14px;
+}
+
+.supporters-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.supporter-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 28px 22px;
+  overflow: hidden;
+  border: 1px solid rgba(174, 126, 255, 0.19);
+  border-radius: 14px;
+  background: linear-gradient(
+    145deg,
+    rgba(30, 23, 44, 0.96),
+    rgba(12, 12, 19, 0.98)
+  );
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.supporter-card:hover {
+  transform: translateY(-7px);
+  border-color: #9d63ff;
+  box-shadow: 0 12px 35px rgba(116, 47, 255, 0.16);
+}
+
+.supporter-number {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  color: rgba(198, 172, 255, 0.45);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.supporter-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 28px;
+  place-items: center;
+  border: 1px solid rgba(178, 128, 255, 0.45);
+  border-radius: 12px;
+  background: rgba(140, 74, 255, 0.12);
+  color: #c8a6ff;
+  font-size: 28px;
+}
+
+.supporter-label {
+  margin-bottom: 10px;
+  color: #ad81ff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+}
+
+.supporter-card h3 {
+  margin: 0 0 12px;
+  color: #fff;
+  font-size: 20px;
+}
+
+.supporter-card p {
+  flex: 1;
+  margin: 0 0 25px;
+}
+
+.supporter-card-featured {
+  border-color: rgba(174, 126, 255, 0.5);
+  background: linear-gradient(
+    145deg,
+    rgba(74, 37, 126, 0.38),
+    rgba(12, 12, 19, 0.98)
+  );
+}
+
+.supporter-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 12px 15px;
+  border: 1px solid #9560f5;
+  border-radius: 7px;
+  background: rgba(139, 76, 255, 0.12);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-align: center;
+  text-decoration: none;
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.supporter-button:hover {
+  background: #8545ed;
+  box-shadow: 0 0 20px rgba(133, 69, 237, 0.28);
+}
+
+.supporters-community {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 25px;
+  margin-top: 45px;
+  padding: 32px;
+  border: 1px solid rgba(174, 126, 255, 0.22);
+  border-radius: 14px;
+  background: rgba(22, 18, 32, 0.85);
+}
+
+.supporters-community h3 {
+  margin: 10px 0;
+  font-size: 24px;
+}
+
+.supporters-community p {
+  margin-bottom: 0;
+}
+
+.supporter-discord {
+  flex-shrink: 0;
+  background: #8145e8;
+}
+
+/* TABLETTES */
+@media (max-width: 1000px) {
+  .supporters-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* MOBILES */
+@media (max-width: 600px) {
+  .supporters-section {
+    padding: 65px 16px;
+  }
+
+  .supporters-header {
+    margin-bottom: 35px;
+  }
+
+  .supporters-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .supporter-card {
+    padding: 25px 22px;
+  }
+
+  .supporters-community {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 24px 20px;
+  }
+
+  .supporter-discord {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
