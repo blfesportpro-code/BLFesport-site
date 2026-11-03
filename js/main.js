@@ -504,6 +504,7 @@ if (year) year.textContent = new Date().getFullYear();
 
     renderNews();renderMatches();loadDiscordEvents();renderRosters();renderVideos();renderStaff();renderPartners();renderShop();renderSocial();
     setInterval(updateCountdown,1000);
+    setInterval(renderLiveEvent, 1000);
     const toggle=$("#menuToggle"),nav=$("#mainNav");
     toggle?.addEventListener("click",()=>{const open=nav.classList.toggle("open");toggle.setAttribute("aria-expanded",String(open));toggle.setAttribute("aria-label",open?"Fermer le menu":"Ouvrir le menu")});
     nav?.querySelectorAll("a").forEach(a=>a.addEventListener("click",()=>{nav.classList.remove("open");toggle?.setAttribute("aria-expanded","false")}));
