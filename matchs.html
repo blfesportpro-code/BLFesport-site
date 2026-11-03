@@ -1,0 +1,103 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b0910">
+  <meta name="description" content="Retrouvez le calendrier et les résultats des équipes BLFesport.">
+  <title>Matchs | BLFesport</title>
+  <link rel="icon" href="assets/blflogo.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html">
+        <img src="assets/blflogo.png" alt="Logo BLFesport">
+        <span>BLFesport</span>
+      </a>
+
+      <button class="menu-toggle" id="menuToggle" aria-label="Ouvrir le menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="main-nav" id="mainNav">
+        <a href="index.html">Accueil</a>
+        <a href="actualites.html">Actualités</a>
+        <a href="equipes.html">Équipes</a>
+        <a href="matchs.html" aria-current="page">Matchs</a>
+        <a href="medias.html">Médias</a>
+        <a href="staff.html">Staff</a>
+        <a href="supporters.html">Supporters</a>
+        <a href="boutique.html">Boutique</a>
+        <a class="nav-cta" href="https://discord.com/invite/Jg9G6TgAen" target="_blank" rel="noopener">Discord</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="section-wrap hero-content">
+        <span class="eyebrow">BLFESPORT · COMPÉTITION</span>
+        <h1>Calendrier des <span>matchs</span></h1>
+        <p>Suivez les rencontres et les performances de nos équipes.</p>
+      </div>
+    </section>
+
+    <section class="section section-wrap">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">À VENIR</span>
+          <h2>Prochain <span>match</span></h2>
+        </div>
+      </div>
+
+      <div class="match-feature" id="nextMatch">
+        <p>Chargement du prochain match...</p>
+      </div>
+    </section>
+
+    <section class="section section-wrap">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">CALENDRIER</span>
+          <h2>Les prochaines <span>rencontres</span></h2>
+        </div>
+      </div>
+
+      <div class="match-list" id="matchList">
+        <p>Chargement du calendrier...</p>
+      </div>
+    </section>
+
+    <section class="section section-wrap">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">SAISON EN COURS</span>
+          <h2>Nos <span>statistiques</span></h2>
+        </div>
+      </div>
+
+      <div class="season-stats" id="seasonStats">
+        <p>Chargement des statistiques...</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="section-wrap footer-inner">
+      <a class="brand" href="index.html">
+        <img src="assets/blflogo.png" alt="Logo BLFesport">
+        <span>BLFesport</span>
+      </a>
+      <p>Gagner. Progresser. S'amuser.</p>
+      <p>© <span id="year"></span> BLFesport. Tous droits réservés.</p>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
