@@ -131,7 +131,8 @@ function renderNews() {
 }
 
 let discordMatches = null;
-
+let discordEvents = [];
+  
 function activeMatches() {
   const localMatches = (data.matches || [])
     .filter(match => !match.example);
