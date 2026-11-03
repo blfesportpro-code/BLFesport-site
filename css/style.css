@@ -413,3 +413,64 @@ section,
   width: 100%;
   max-width: 100%;
 }
+
+/* ==================================
+   ÉVÉNEMENT EN COURS
+================================== */
+
+.live-event-section {
+  padding: 55px 0;
+}
+
+.live-event-box {
+  position: relative;
+  overflow: hidden;
+  padding: 32px;
+  border: 1px solid rgba(179, 75, 255, 0.6);
+  background:
+    radial-gradient(circle at 80% 0%, rgba(179, 75, 255, 0.22), transparent 45%),
+    #15101d;
+}
+
+.live-event-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #c98aff;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.live-event-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #c65cff;
+  box-shadow: 0 0 15px #c65cff;
+  animation: livePulse 1.5s infinite;
+}
+
+.live-event-box h2 {
+  margin: 15px 0 10px;
+  font-size: clamp(30px, 5vw, 52px);
+}
+
+.live-event-box p {
+  color: #aaa0b5;
+  line-height: 1.7;
+}
+
+.live-event-time {
+  margin-top: 20px;
+  color: #d7a2ff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+@keyframes livePulse {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+}
