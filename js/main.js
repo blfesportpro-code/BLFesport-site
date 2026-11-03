@@ -188,6 +188,61 @@ discordMatches = events
       }))
       .sort((a, b) => new Date(a.date) - new Date(b.date));
 
+   function renderLiveEvent() {
+  const section = $("#liveEventSection");
+  const host = $("#liveEvent");
+
+  if (!section || !host) return;
+
+  const now = Date.now();
+
+  const currentEvent = discordEvents.find(event => {
+    if (event.status !== 1) return false;
+
+    const start = new Date(event.scheduled_start_time).getTime();
+
+    // Discord peut ne pas fournir d'heure de fin.
+    const end = event.scheduled_end_time
+      ? new Date(event.scheduled_end_time).getTime()
+      : null;
+
+    return start <= now && (!end || now < end);
+  });
+
+  if (!currentEvent) {
+    section.hidden = true;
+    host.innerHTML = "";
+    return;
+  }
+
+  section.hidden = false;
+
+  const endText = currentEvent.scheduled_end_time
+    ? formatDateTime(currentEvent.scheduled_end_time)
+    : "Heure de fin non renseignée";
+
+  host.innerHTML = `
+    <div class="live-event-box">
+      <div class="live-event-label">
+        <span class="live-event-dot"></span>
+        ÉVÉNEMENT EN COURS
+      </div>
+
+      <h2>${esc(currentEvent.name || "Événement BLFesport")}</h2>
+
+      ${
+        currentEvent.description
+          ? `<p>${esc(currentEvent.description)}</p>`
+          : ""
+      }
+
+      <div class="live-event-time">
+        FIN PRÉVUE · ${esc(endText)}
+      </div>
+    </div>
+  `;
+}
+   
     renderMatches();
   } catch (error) {
     console.error("Synchronisation Discord impossible :", error);
