@@ -777,3 +777,9 @@ main p {
     font-size: 24px;
   }
 }
+
+/* Alignement identique du menu déroulant sur toutes les pages */
+.dropdown-menu {
+  left: auto !important;
+  right: 0 !important;
+}
