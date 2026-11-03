@@ -408,10 +408,21 @@ section,
   min-width: 0;
 }
 
-.section-wrap,
+.section-wrap {
+  width: min(var(--max), calc(100% - 48px));
+  margin-inline: auto;
+}
+
 .supporters-container {
   width: 100%;
-  max-width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+}
+
+@media (max-width: 760px) {
+  .section-wrap {
+    width: calc(100% - 32px);
+  }
 }
 
 /* ==================================
