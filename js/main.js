@@ -161,9 +161,13 @@ async function loadDiscordEvents() {
       throw new Error("Réponse Discord invalide.");
     }
 
-    const now = Date.now();
+    discordEvents = events;
 
-    discordMatches = events
+renderLiveEvent();
+
+const now = Date.now();
+
+discordMatches = events
       .filter(event =>
         event.status === 1 &&
         event.scheduled_start_time &&
