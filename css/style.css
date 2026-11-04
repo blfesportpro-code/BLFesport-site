@@ -10,6 +10,18 @@
   overflow-x: clip;
 }
 
+/* POLICES OFFICIELLES BLFESPORT */
+body {
+  font-family: 'Inter', Arial, sans-serif;
+}
+
+h1, h2, h3, h4,
+.brand,
+.hero h1,
+.section-heading h2 {
+  font-family: 'Barlow Condensed', sans-serif;
+}
+
 html {
   width: 100%;
   overflow-x: clip;
