@@ -1,4 +1,5 @@
 /* BLFesport — design responsive, sombre et violet */
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap');
 :root{--bg:#0b0910;--panel:#14101a;--panel2:#1b1523;--purple:#b34bff;--purple2:#7b28c9;--pink:#e16bff;--white:#f7f4fb;--muted:#a49baa;--line:rgba(210,178,232,.16);--silver:#b8b4c1;--max:1180px}
 *{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:90px}body {
   margin: 0;
