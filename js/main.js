@@ -15,14 +15,20 @@
       "'": "&#39;"
     })[char]);
 
-  const validUrl = value => {
-    try {
-      const url = new URL(value);
-      return ["http:", "https:"].includes(url.protocol) ? url.href : "";
-    } catch {
-      return "";
-    }
-  };
+  
+const validUrl = value => {
+  if (!value) return "";
+
+  try {
+    const url = new URL(value, document.baseURI);
+    return ["http:", "https:"].includes(url.protocol)
+      ? url.href
+      : "";
+  } catch {
+    return "";
+  }
+};
+
 
   const empty = message =>
     `<div class="empty-state">${esc(message)}</div>`;
