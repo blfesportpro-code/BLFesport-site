@@ -694,31 +694,39 @@
      STAFF
   ========================= */
 
-  function renderStaff() {
-    const host = $("#staffGrid");
-    if (!host) return;
+ 
+function renderStaff() {
+  const host = $("#staffGrid");
+  if (!host) return;
 
-    const items = data.staff || [];
+  const items = Array.isArray(data.staff) ? data.staff : [];
 
-    host.innerHTML = items.length
-      ? items.map(member => `
-          <article class="staff-card">
-            <div class="staff-avatar">
-              ${
-                validUrl(member.avatar)
-                  ? `<img loading="lazy" src="${esc(validUrl(member.avatar))}" alt="">`
-                  : esc(initials(member.nickname))
-              }
-            </div>
-            <div>
-              <h3>${esc(member.nickname || "Pseudo à renseigner")}</h3>
-              <small>${esc(member.role || "Fonction à renseigner")}</small>
-              <p>${esc(member.bio || "Présentation à venir.")}</p>
-            </div>
-          </article>
-        `).join("")
-      : empty("Les responsables seront présentés ici.");
-  }
+  host.innerHTML = items.length
+    ? items.map(member => `
+        <article class="staff-card">
+          <div class="staff-avatar">
+            ${
+              validUrl(member.avatar)
+                ? `<img
+                    loading="lazy"
+                    src="${esc(member.avatar)}"
+                    alt="Photo de ${esc(member.nickname || "membre du staff")}"
+                  >`
+                : `<span>${esc(initials(member.nickname))}</span>`
+            }
+          </div>
+
+          <div class="staff-info">
+            <span class="staff-label">BLFESPORT STAFF</span>
+            <h3>${esc(member.nickname || "Pseudo à renseigner")}</h3>
+            <div class="staff-role">${esc(member.role || "Fonction à renseigner")}</div>
+            <p>${esc(member.bio || "Présentation à venir.")}</p>
+          </div>
+        </article>
+      `).join("")
+    : empty("Les responsables seront présentés ici.");
+}
+
 
 
   /* =========================
