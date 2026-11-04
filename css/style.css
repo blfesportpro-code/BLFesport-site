@@ -878,3 +878,71 @@ main p {
     box-sizing: border-box;
   }
 }
+
+
+/* STAFF BLFESPORT */
+
+.staff-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 24px;
+}
+
+.staff-card {
+  position: relative;
+  overflow: hidden;
+  padding: 28px 22px;
+  text-align: center;
+  background: linear-gradient(145deg, #171020, #0c0a11);
+  border: 1px solid rgba(177, 105, 255, 0.25);
+  border-radius: 18px;
+  transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.staff-card:hover {
+  transform: translateY(-6px);
+  border-color: #a855f7;
+}
+
+.staff-avatar {
+  width: 135px;
+  height: 135px;
+  margin: 0 auto 20px;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 3px solid #a855f7;
+  box-shadow: 0 0 22px rgba(168, 85, 247, 0.3);
+  background: #21152d;
+}
+
+.staff-avatar img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.staff-info h3 {
+  margin: 8px 0;
+  font-size: 21px;
+}
+
+.staff-label {
+  color: #bd83ff;
+  font-size: 10px;
+  letter-spacing: 2px;
+  font-weight: 700;
+}
+
+.staff-role {
+  color: #c18aff;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.staff-info p {
+  color: #aaa2b5;
+  font-size: 13px;
+  line-height: 1.7;
+}
