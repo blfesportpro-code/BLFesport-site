@@ -783,3 +783,13 @@ main p {
   left: auto !important;
   right: 0 !important;
 }
+
+@media (max-width: 760px) {
+  body:not(:has(.hero-copy)) .main-nav {
+    left: auto;
+    right: 0;
+    width: 280px;
+    max-width: 100%;
+    align-items: stretch;
+  }
+}
