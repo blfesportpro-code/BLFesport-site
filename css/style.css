@@ -822,3 +822,14 @@ main p {
     border: 0;
   }
 }
+
+/* CORRECTION MENU MOBILE BLFESPORT */
+@media (max-width: 760px) {
+  .site-header .main-nav {
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
