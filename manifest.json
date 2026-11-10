@@ -9,7 +9,7 @@
   "theme_color": "#0b0910",
   "icons": [
     {
-      "src": "assets/blflogo.png",
+      "src": "assets/logo.png",
       "sizes": "512x512",
       "type": "image/png"
     }
