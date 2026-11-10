@@ -946,3 +946,18 @@ main p {
   font-size: 13px;
   line-height: 1.7;
 }
+
+/* Bannière des actualités BLFesport */
+.news-banner {
+  width: 100%;
+  margin-bottom: 28px;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(160, 100, 255, 0.3);
+}
+
+.news-banner img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
