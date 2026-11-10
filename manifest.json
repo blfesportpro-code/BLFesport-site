@@ -1,0 +1,17 @@
+{
+  "name": "BLFesport",
+  "short_name": "BLFesport",
+  "description": "Site officiel de BLFesport",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b0910",
+  "theme_color": "#0b0910",
+  "icons": [
+    {
+      "src": "assets/blflogo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
