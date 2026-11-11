@@ -951,6 +951,7 @@ function renderStaff() {
 
     renderNews();
     renderMatches();
+    renderHomeResults();
     renderLiveEvent();
     loadDiscordEvents();
     renderRosters();
