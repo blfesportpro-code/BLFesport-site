@@ -413,17 +413,70 @@ const validUrl = value => {
         : empty("Le calendrier sera publié dès que les dates et adversaires seront confirmés.");
     }
 
-    const stats = $("#seasonStats");
+    
+const stats = $("#seasonStats");
 
-    if (stats) {
-      stats.innerHTML = (data.seasonStats || [])
-        .map(stat => `
-          <div class="stat-box">
-            <strong>${esc(stat.value || "—")}</strong>
-            <span>${esc(stat.label || "")}</span>
-          </div>
-        `).join("") || empty("Statistiques à renseigner.");
-    }
+if (stats) {
+  // Statistiques de départ déjà enregistrées
+  const base = data.seasonStats || [];
+
+  const getBase = label =>
+    Number(base.find(s =>
+      s.label.toLowerCase() === label.toLowerCase()
+    )?.value) || 0;
+
+  const basePlayed = getBase("Matchs joués");
+  const baseWins = getBase("Victoires");
+  const baseLosses = Math.max(0, basePlayed - baseWins);
+
+  // Nouveaux matchs officiels terminés
+  const finished = (data.matches || [])
+    .filter(match =>
+      match.status === "finished" &&
+      !match.example &&
+      match.type !== "friendly"
+    );
+
+  let wins = 0;
+  let losses = 0;
+  let draws = 0;
+
+  finished.forEach(match => {
+    const score = String(match.result || "")
+      .match(/(\d+)\s*[-–:]\s*(\d+)/);
+
+    if (!score) return;
+
+    const blf = Number(score[1]);
+    const opponent = Number(score[2]);
+
+    if (blf > opponent) wins++;
+    else if (blf < opponent) losses++;
+    else draws++;
+  });
+
+  const played = basePlayed + wins + losses + draws;
+  const totalWins = baseWins + wins;
+  const totalLosses = baseLosses + losses;
+  const percentage = played
+    ? ((totalWins / played) * 100).toFixed(1)
+    : "0";
+
+  const finalStats = [
+    { label: "Matchs joués", value: played },
+    { label: "Victoires", value: totalWins },
+    { label: "Défaites", value: totalLosses },
+    { label: "Taux de victoire", value: percentage + "%" }
+  ];
+
+  stats.innerHTML = finalStats.map(stat => `
+    <div class="stat-box">
+      <strong>${esc(stat.value)}</strong>
+      <span>${esc(stat.label)}</span>
+    </div>
+  `).join("");
+}
+
 
     updateCountdown();
   }
