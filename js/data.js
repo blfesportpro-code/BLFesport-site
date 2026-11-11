@@ -78,11 +78,11 @@ window.BLF_DATA = {
     example: false
   }
 ],
-  seasonStats: [
-    { label: "Matchs joués", value: "34" },
-    { label: "Victoires", value: "24" },
-     { label: "Défaites", value: "10" },
-  ],
+ seasonStats: [
+  { label: "Matchs joués", value: "33" },
+  { label: "Victoires", value: "23" },
+  { label: "Défaites", value: "10" }
+],
   tournaments: [],
   videos: [
   {
