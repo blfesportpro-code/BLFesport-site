@@ -427,7 +427,71 @@ const validUrl = value => {
 
     updateCountdown();
   }
+/* =========================
+   DERNIERS RÉSULTATS — ACCUEIL
+========================= */
 
+function renderHomeResults() {
+  const host = $("#homeResultsGrid");
+  if (!host) return;
+
+  const results = (data.matches || [])
+    .filter(match => match.status === "finished" && !match.example)
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 4);
+
+  host.innerHTML = results.length
+    ? results.map(match => {
+        const score = String(match.result || "—");
+        const numbers = score.match(/(\d+)\s*[-–:]\s*(\d+)/);
+
+        let status = "";
+        if (numbers) {
+          status = Number(numbers[1]) > Number(numbers[2])
+            ? "win"
+            : Number(numbers[1]) < Number(numbers[2])
+              ? "loss"
+              : "draw";
+        }
+
+        const statusText = status === "win"
+          ? "VICTOIRE"
+          : status === "loss"
+            ? "DÉFAITE"
+            : status === "draw"
+              ? "ÉGALITÉ"
+              : "TERMINÉ";
+
+        return `
+          <article class="home-result-card">
+            <div class="home-result-teams">
+              <div class="home-result-team">
+                <strong>BLFesport</strong>
+              </div>
+
+              <div class="home-result-score">${esc(score)}</div>
+
+              <div class="home-result-team">
+                <strong>${esc(match.opponent || "Adversaire")}</strong>
+              </div>
+            </div>
+
+            <div class="home-result-info">
+              <span>${esc(match.competition || "Compétition")}</span>
+              <span class="home-result-status ${status}">
+                ${statusText}
+              </span>
+            </div>
+
+            <div class="home-result-info">
+              <span>${esc(match.roster || "BLFesport")}</span>
+              <span>${esc(formatDate(match.date))}</span>
+            </div>
+          </article>
+        `;
+      }).join("")
+    : empty("Aucun résultat disponible pour le moment.");
+}
   function updateCountdown() {
     document.querySelectorAll("[data-countdown]").forEach(element => {
       const target = new Date(element.dataset.countdown).getTime();
