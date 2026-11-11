@@ -79,8 +79,9 @@ window.BLF_DATA = {
   }
 ],
   seasonStats: [
-    { label: "Matchs joués", value: "31" },
-    { label: "Victoires", value: "21" },
+    { label: "Matchs joués", value: "34" },
+    { label: "Victoires", value: "24" },
+     { label: "Défaites", value: "10" },
   ],
   tournaments: [],
   videos: [
