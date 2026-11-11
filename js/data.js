@@ -65,7 +65,7 @@ window.BLF_DATA = {
     result: "3-0",
     example: false
   },
-    {
+  {
     id: "match-2",
     date: "2026-10-31T17:00:00",
     roster: "Roster A",
@@ -77,7 +77,7 @@ window.BLF_DATA = {
     result: "4-0",
     example: false
   },
-    {
+  {
     id: "match-3",
     date: "2026-11-11T15:00:00",
     roster: "Roster ACADEMIQUE",
@@ -88,6 +88,7 @@ window.BLF_DATA = {
     status: "finished",
     result: "3-2",
     example: false
+  }
 ],
  seasonStats: [
   { label: "Matchs joués", value: "33" },
