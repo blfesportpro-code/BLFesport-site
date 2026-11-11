@@ -76,7 +76,18 @@ window.BLF_DATA = {
     status: "finished",
     result: "4-0",
     example: false
-  }
+  },
+    {
+    id: "match-3",
+    date: "2026-11-11T15:00:00",
+    roster: "Roster ACADEMIQUE",
+    opponent: "NOVA esport",
+    type: "friendly",
+    format: "BO5",
+    streamUrl: "",
+    status: "finished",
+    result: "3-2",
+    example: false
 ],
  seasonStats: [
   { label: "Matchs joués", value: "33" },
