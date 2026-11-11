@@ -52,17 +52,17 @@ window.BLF_DATA = {
 },
     { id: "roster-c", name: "Roster ACADEMIQUE", subtitle: "Projet compétitif", game: "Rocket League", status: "Composition à renseigner", accent: "dark", description: "Ce roster sera présenté lorsque ses informations seront confirmées.", players: [] }
   ],
-  matches: [
+ matches: [
   {
     id: "match-1",
-    date: "2026-10-27T23:35:00",
-    roster: "Roster B",
-    opponent: "Nom de l'équipe adverse",
-    competition: "Tournoi Rocket League",
+    date: "2026-11-11T15:00:00",
+    roster: "Roster ACADEMIQUE",
+    opponent: "NOVA esport",
+    competition: "Scrim",
     format: "BO5",
     streamUrl: "",
-    status: "upcoming",
-    result: "",
+    status: "finished",
+    result: "3-2",
     example: false
   }
 ],
