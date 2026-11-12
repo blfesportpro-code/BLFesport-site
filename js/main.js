@@ -277,7 +277,7 @@ const validUrl = value => {
         .sort((a, b) => new Date(a.date) - new Date(b.date));
 
       renderLiveEvent();
-      renderMatches();
+window.BLF_MATCH?.setDiscordMatches(discordMatches);
 
     } catch (error) {
       console.error("Synchronisation Discord impossible :", error);
