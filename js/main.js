@@ -291,28 +291,6 @@ window.BLF_MATCH?.setDiscordMatches(discordMatches);
 ========================= */
 
 
-  function updateCountdown() {
-    document.querySelectorAll("[data-countdown]").forEach(element => {
-      const target = new Date(element.dataset.countdown).getTime();
-
-      if (!Number.isFinite(target)) return;
-
-      const diff = Math.max(0, target - Date.now());
-
-      const values = {
-        days: Math.floor(diff / 86400000),
-        hours: Math.floor(diff % 86400000 / 3600000),
-        minutes: Math.floor(diff % 3600000 / 60000),
-        seconds: Math.floor(diff % 60000 / 1000)
-      };
-
-      Object.entries(values).forEach(([key, value]) => {
-        const node = element.querySelector(`[data-${key}]`);
-        if (node) node.textContent = String(value).padStart(2, "0");
-      });
-    });
-  }
-
 
   /* =========================
      ÉQUIPES
