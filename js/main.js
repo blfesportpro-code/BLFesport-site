@@ -175,15 +175,6 @@ const validUrl = value => {
   let discordMatches = [];
   let discordEvents = [];
 
-  function activeMatches() {
-    const localMatches = (data.matches || [])
-      .filter(match => !match.example);
-
-    return discordMatches.length
-      ? [...localMatches, ...discordMatches]
-      : localMatches;
-  }
-
   function isEventCurrentlyActive(event) {
     const now = Date.now();
     const start = new Date(event.scheduled_start_time).getTime();
