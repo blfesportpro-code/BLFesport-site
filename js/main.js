@@ -727,8 +727,7 @@ function renderStaff() {
     if (year) year.textContent = new Date().getFullYear();
 
     renderNews();
-    renderMatches();
-    renderHomeResults();
+    window.BLF_MATCH?.render();
     renderLiveEvent();
     loadDiscordEvents();
     renderRosters();
