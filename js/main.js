@@ -737,7 +737,7 @@ function renderStaff() {
     renderShop();
     renderSocial();
 
-    setInterval(updateCountdown, 1000);
+    setInterval(() => window.BLF_MATCH?.updateCountdown(), 1000);
     setInterval(renderLiveEvent, 1000);
 
     const toggle = $("#menuToggle");
