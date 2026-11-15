@@ -100,6 +100,18 @@ window.BLF_DATA = {
     status: "finished",
     result: "3-0",
     example: false
+  },
+  {
+    id: "match-5",
+    date: "2026-11-15T15:00:00",
+    roster: "Roster ACADEMIQUE",
+    opponent: "Shadow esport",
+    type: "friendly",
+    format: "BO5",
+    streamUrl: "",
+    status: "finished",
+    result: "1-3",
+    example: false
   }
 ],
  seasonStats: [
