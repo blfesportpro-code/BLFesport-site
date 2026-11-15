@@ -88,6 +88,18 @@ window.BLF_DATA = {
     status: "finished",
     result: "3-2",
     example: false
+  },
+  {
+    id: "match-4",
+    date: "2026-11-14T17:00:00",
+    roster: "Roster ACADEMIQUE",
+    opponent: "Spiny esport",
+    type: "friendly",
+    format: "BO5",
+    streamUrl: "",
+    status: "finished",
+    result: "3-0",
+    example: false
   }
 ],
  seasonStats: [
