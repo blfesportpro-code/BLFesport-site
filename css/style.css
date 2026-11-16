@@ -81,7 +81,18 @@ transition:opacity .3s ease;}.news-card:hover:after{
   transform:translateY(-5px);
   border-color:#b34bff;
   box-shadow:0 12px 35px #9d2fe522;
-}.youtube-card{background:linear-gradient(135deg,#23131b,#110d16)}.media-card-top{display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1}.platform-icon{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;font-weight:900}.twitch-icon{background:#9146ff}.youtube-icon{background:#fa3535}.media-status{font-size:8px;letter-spacing:1px;color:#c2b4ce}.media-status i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#bc62ff;margin-right:7px}.media-card h3{font:800 32px "Barlow Condensed",sans-serif;margin:28px 0 8px;position:relative;z-index:1}.media-card p{font-size:11px;color:#a99caf;line-height:1.8;max-width:370px;position:relative;z-index:1}.text-link{display:inline-flex;gap:20px;color:#d7a2ff;font-size:10px;font-weight:800;margin-top:13px;position:relative;z-index:1}.media-watermark{position:absolute;right:-10px;bottom:-28px;font:900 88px "Barlow Condensed",sans-serif;color:#ffffff05;pointer-events:none}.video-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.video-card{border:1px solid var(--line);background:#15101b;overflow:hidden}.video-thumb{aspect-ratio:16/9;background:linear-gradient(135deg,#281738,#100c14);display:grid;place-items:center;color:#d3a1ff;font-size:28px;overflow:hidden}.video-thumb img{width:100%;height:100%;object-fit:cover}.video-thumb iframe{width:100%;height:100%;border:0}.video-body{padding:15px}.video-body small{font-size:8px;color:#bd83e9;letter-spacing:1px}.video-body h4{font:700 19px "Barlow Condensed",sans-serif;margin:8px 0}.video-body p{font-size:10px;color:#a499ae;line-height:1.7}.video-body a{font-size:10px;color:#d2a1ff;font-weight:700}
+}.youtube-card{background:linear-gradient(135deg,#23131b,#110d16)}.media-card-top{display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1}.platform-icon{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;font-weight:900}.twitch-icon{background:#9146ff}.youtube-icon{background:#fa3535}.media-status{font-size:8px;letter-spacing:1px;color:#c2b4ce}.media-status i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#bc62ff;margin-right:7px}.media-card h3{font:800 32px "Barlow Condensed",sans-serif;margin:28px 0 8px;position:relative;z-index:1}.media-card p{font-size:11px;color:#a99caf;line-height:1.8;max-width:370px;position:relative;z-index:1}.text-link{display:inline-flex;gap:20px;color:#d7a2ff;font-size:10px;font-weight:800;margin-top:13px;position:relative;z-index:1}.media-watermark{position:absolute;right:-10px;bottom:-28px;font:900 88px "Barlow Condensed",sans-serif;color:#ffffff05;pointer-events:none}.video-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.video-card{
+  border:1px solid var(--line);
+  background:#15101b;
+  overflow:hidden;
+  transition:transform .3s ease,border-color .3s ease,box-shadow .3s ease;
+}
+
+.video-card:hover{
+  transform:translateY(-4px);
+  border-color:#b34bff;
+  box-shadow:0 10px 28px #9d2fe51c;
+}.video-thumb{aspect-ratio:16/9;background:linear-gradient(135deg,#281738,#100c14);display:grid;place-items:center;color:#d3a1ff;font-size:28px;overflow:hidden}.video-thumb img{width:100%;height:100%;object-fit:cover}.video-thumb iframe{width:100%;height:100%;border:0}.video-body{padding:15px}.video-body small{font-size:8px;color:#bd83e9;letter-spacing:1px}.video-body h4{font:700 19px "Barlow Condensed",sans-serif;margin:8px 0}.video-body p{font-size:10px;color:#a499ae;line-height:1.7}.video-body a{font-size:10px;color:#d2a1ff;font-weight:700}
 .staff-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.staff-card{
   display:flex;
   gap:15px;
