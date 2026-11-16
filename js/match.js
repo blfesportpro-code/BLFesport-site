@@ -233,48 +233,46 @@ let showAllMatches = false;
     
 list.innerHTML = rows.length
   ? rows.map((match, index) => `
-      <div class="match-row" style="${index >= 3 && !showAllMatches ? "display:none;" : ""}">
+      
+<div class="match-row" style="${index >= 3 && !showAllMatches ? "display:none;" : ""}">
 
-        <div class="match-date">
-          ${esc(formatDate(match.date))}
-        </div>
+  <div class="match-date">
+    ${esc(formatDate(match.date))}
+  </div>
 
-        <div class="match-teams">
-          <div class="match-team-logo">
-            <img src="assets/blflogo.png" alt="BLFesport">
-          </div>
+  <div class="match-teams">
+    <div class="match-team-logo">
+      <img src="assets/blflogo.png" alt="BLFesport">
+    </div>
+    <div class="match-team-name">
+      <strong>BLFesport</strong>
+      <span>VS</span>
+      <strong>${esc(match.opponent || "Adversaire à confirmer")}</strong>
+    </div>
+  </div>
 
-          <div class="match-team-name">
-            <strong>BLFesport</strong>
-            <span>VS</span>
-            <strong>${esc(match.opponent || "Adversaire à confirmer")}</strong>
-          </div>
-        </div>
+  <div class="match-info match-extra">
+    <span>${esc(match.roster || "Roster à confirmer")}</span>
+    <span>${esc(match.competition || "Compétition à confirmer")}</span>
+    <span>${esc(match.format || "Format à confirmer")}</span>
+  </div>
 
-        <div class="match-info">
-          ${esc(match.roster || "Roster à confirmer")} ·
-          ${esc(match.competition || "Compétition à confirmer")}
-        </div>
+  <span class="match-status ${
+    match.status === "finished"
+      ? (Number(String(match.result).split(/[-–:]/)[0]) > Number(String(match.result).split(/[-–:]/)[1])
+          ? "win"
+          : Number(String(match.result).split(/[-–:]/)[0]) < Number(String(match.result).split(/[-–:]/)[1])
+            ? "loss"
+            : "draw")
+      : ""
+  }">
+    ${match.status === "finished"
+      ? esc(match.result || "Résultat à renseigner")
+      : "À venir"}
+  </span>
 
-        <div class="match-info">
-          ${esc(match.format || "Format à confirmer")}
-        </div>
+</div>
 
-       <span class="match-status ${
-  match.status === "finished"
-    ? (Number(String(match.result).split(/[-–:]/)[0]) > Number(String(match.result).split(/[-–:]/)[1])
-        ? "win"
-        : Number(String(match.result).split(/[-–:]/)[0]) < Number(String(match.result).split(/[-–:]/)[1])
-          ? "loss"
-          : "draw")
-    : ""
-}">
-          ${match.status === "finished"
-            ? esc(match.result || "Résultat à renseigner")
-            : "À venir"}
-        </span>
-
-      </div>
     `).join("")
   : empty("Le calendrier sera publié dès que les dates et adversaires seront confirmés.");
 
