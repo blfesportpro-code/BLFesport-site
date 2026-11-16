@@ -1325,3 +1325,27 @@ main p {
     margin-right: 12px;
   }
 }
+
+/* BLFesport — alignement définitif des matchs sur PC */
+@media (min-width: 761px) {
+  .match-row {
+    grid-template-columns: 100px minmax(180px, 1.2fr) minmax(0, 1fr) 85px !important;
+    gap: 14px;
+    align-items: center;
+  }
+
+  .match-extra {
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px 10px;
+    overflow-wrap: anywhere;
+  }
+
+  .match-status {
+    grid-column: 4;
+    justify-self: end;
+    min-width: 65px;
+    text-align: center;
+  }
+}
