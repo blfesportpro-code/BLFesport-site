@@ -802,14 +802,17 @@ function renderStaff() {
         rootMargin: "0px 0px -35px 0px"
       });
 
-      const observeRevealElements = () => {
-        document.querySelectorAll(revealTargets).forEach(element => {
-          if (!element.classList.contains("reveal")) {
-            element.classList.add("reveal");
-            observer.observe(element);
-          }
-        });
-      };
+     const observeRevealElements = () => {
+  document.querySelectorAll(revealTargets).forEach(element => {
+    if (!element.classList.contains("reveal")) {
+      element.classList.add("reveal");
+    }
+
+    if (!element.classList.contains("visible")) {
+      observer.observe(element);
+    }
+  });
+};
 
       observeRevealElements();
 
