@@ -1377,3 +1377,57 @@ main p {
 .match-opponent-logo {
   border-color: #b34cff55;
 }
+
+/* BLFesport — Rediffusions YouTube */
+
+.match-replay {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  margin: 5px 0 12px;
+  background: #17121f;
+  border: 1px solid #b34cff35;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #fff;
+  transition: .2s ease;
+}
+
+.match-replay:hover {
+  border-color: #b34cff;
+  background: #21172d;
+}
+
+.match-replay img {
+  width: 120px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.match-replay > span {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.replay-play {
+  color: #c77aff;
+  font-size: 18px;
+}
+
+@media (max-width: 760px) {
+  .match-replay {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .match-replay img {
+    width: 105px;
+  }
+}
