@@ -1086,3 +1086,39 @@ main p {
   font-weight: 800;
   font-size: 12px;
 }
+
+/* Correction alignement des lignes de matchs */
+.match-row {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr) 70px auto;
+  align-items: center;
+  gap: 16px;
+}
+
+.match-teams {
+  min-width: 0;
+}
+
+.match-team-name {
+  min-width: 0;
+}
+
+.match-status {
+  justify-self: end;
+  white-space: nowrap;
+}
+
+@media (max-width: 650px) {
+  .match-row {
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+  }
+
+  .match-date {
+    grid-column: 1 / -1;
+  }
+
+  .match-status {
+    grid-column: 2;
+  }
+}
