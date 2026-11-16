@@ -270,6 +270,8 @@ if (toggle) {
   };
 }
 
+}
+    
     const stats = $("#seasonStats");
 
     if (stats) {
