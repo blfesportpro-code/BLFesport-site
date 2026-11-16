@@ -1307,3 +1307,18 @@ main p {
     align-self: center;
   }
 }
+
+/* Espacement des informations de match sur PC */
+@media (min-width: 761px) {
+  .match-extra {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    align-items: center;
+    line-height: 1.6;
+  }
+
+  .match-extra span {
+    display: inline-block;
+  }
+}
