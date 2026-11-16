@@ -225,16 +225,18 @@ let showAllMatches = false;
         .filter(match => match.status === "finished")
         .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-     const rows = [
+const rows = [
   ...upcoming,
   ...recent
 ];
 
+const visibleRows = showAllMatches ? rows : rows.slice(0, 3);
+
     
 list.innerHTML = rows.length
-  ? rows.map((match, index) => `
-      
-<div class="match-row" style="${index >= 3 && !showAllMatches ? "display:none;" : ""}">
+  ? visibleRows.map(match => `
+
+<div class="match-row">
 
   <div class="match-date">
     ${esc(formatDate(match.date))}
