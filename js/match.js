@@ -255,7 +255,7 @@ list.innerHTML = rows.length
 
   <div class="match-info match-extra">
     <span>${esc(match.roster || "Roster à confirmer")}</span>
-    <span>${esc(match.competition || "")}</span>
+    <span>${esc(match.competition || "Scrim")}</span>
     <span>${esc(match.format || "Format à confirmer")}</span>
   </div>
 
