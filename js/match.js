@@ -309,9 +309,38 @@ toggle.style.display = rows.length > 3 ? "" : "none";
       stats.innerHTML = getStats().map(stat => `
         <div class="stat-box">
           <strong>${esc(stat.value)}</strong>
-          <span>${esc(stat.label)}</span>
-        </div>
-      `).join("");
+          <span>${esc(stat.label)}  </span>
+
+  ${
+    match.replayUrl && validUrl(match.replayUrl)
+      ? (() => {
+          const url = validUrl(match.replayUrl);
+          const videoId = url.match(
+            /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/
+          )?.[1];
+
+          return videoId ? `
+            <a
+              class="match-replay"
+              href="${esc(url)}"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg"
+                alt="Rediffusion du match contre ${esc(match.opponent || "adversaire")}"
+                loading="lazy"
+              >
+              <span><span class="replay-play">▶</span> VOIR LA REDIFFUSION</span>
+            </a>
+          ` : "";
+        })()
+      : ""
+  }
+
+</div>
+
+    `).join("");
     }
 
     updateCountdown();
