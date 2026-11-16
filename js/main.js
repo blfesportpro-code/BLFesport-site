@@ -762,7 +762,44 @@ function renderStaff() {
       });
     });
 
-      /* =========================
+     /* =========================
+   COMPTEURS ANIMÉS
+========================= */
+
+const counters = document.querySelectorAll(".count-up");
+
+const counterObserver = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (!entry.isIntersecting) return;
+
+    const counter = entry.target;
+    const target = Number(counter.dataset.target);
+    const duration = 1200;
+    const start = performance.now();
+
+    const updateCounter = now => {
+      const progress = Math.min((now - start) / duration, 1);
+      const value = Math.floor(progress * target);
+
+      counter.textContent = String(value).padStart(2, "0");
+
+      if (progress < 1) {
+        requestAnimationFrame(updateCounter);
+      } else {
+        counter.textContent = String(target).padStart(2, "0");
+      }
+    };
+
+    requestAnimationFrame(updateCounter);
+    counterObserver.unobserve(counter);
+  });
+}, {
+  threshold: 0.5
+});
+
+counters.forEach(counter => counterObserver.observe(counter));
+    
+    /* =========================
        ANIMATIONS AU DÉFILEMENT
     ========================= */
 
