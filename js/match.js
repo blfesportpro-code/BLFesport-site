@@ -280,7 +280,32 @@ list.innerHTML = rows.length
     ${match.status === "finished"
       ? esc(match.result || "Résultat à renseigner")
       : "À venir"}
-  </span>
+   </span>
+
+  ${
+    match.replayUrl && validUrl(match.replayUrl)
+      ? (() => {
+          const url = validUrl(match.replayUrl);
+          const videoId = url.match(
+            /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/
+          )?.[1];
+
+          return videoId ? `
+            <a class="match-replay"
+               href="${esc(url)}"
+               target="_blank"
+               rel="noopener noreferrer">
+              <img
+                src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg"
+                alt="Rediffusion du match"
+                loading="lazy"
+              >
+              <span><span class="replay-play">▶</span> VOIR LA REDIFFUSION</span>
+            </a>
+          ` : "";
+        })()
+      : ""
+  }
 
 </div>
 
