@@ -1431,3 +1431,8 @@ main p {
     width: 105px;
   }
 }
+
+.reveal {
+  opacity: 1 !important;
+  transform: none !important;
+}
