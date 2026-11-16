@@ -1047,3 +1047,42 @@ main p {
     grid-template-columns: 1fr;
   }
 }
+
+/* Logos des équipes dans les matchs */
+.match-teams {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.match-team-logo {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(199, 122, 255, 0.3);
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.match-team-logo img {
+  width: 80%;
+  height: 80%;
+  object-fit: contain;
+}
+
+.match-team-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.match-team-name span {
+  color: #c77aff;
+  font-weight: 800;
+  font-size: 12px;
+}
