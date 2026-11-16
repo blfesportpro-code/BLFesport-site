@@ -97,7 +97,7 @@ window.BLF_DATA = {
     date: "2026-11-14T17:00:00",
     roster: "Roster ACADEMIQUE",
     opponent: "Spiny esport",
-    opponentLogo: "",
+    opponentLogo: "assets/spiny.png",
     type: "official",
     format: "BO5",
     streamUrl: "",
