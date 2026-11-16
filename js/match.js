@@ -56,6 +56,7 @@
   };
 
   let discordMatches = [];
+let showAllMatches = false;
 
   function activeMatches() {
     const local = (data.matches || [])
