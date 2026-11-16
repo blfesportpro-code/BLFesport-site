@@ -256,6 +256,20 @@ let showAllMatches = false;
             </div>
           `).join("")
         : empty("Le calendrier sera publié dès que les dates et adversaires seront confirmés.");
+      const toggle = $("#matchListToggle");
+
+if (toggle) {
+  toggle.textContent = showAllMatches
+    ? "Réduire ↑"
+    : "Voir tous les matchs ↓";
+
+  toggle.hidden = rows.length <= 3;
+
+  toggle.onclick = () => {
+    showAllMatches = !showAllMatches;
+    renderMatches();
+  };
+}
     }
 
     const stats = $("#seasonStats");
