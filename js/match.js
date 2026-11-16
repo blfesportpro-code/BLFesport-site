@@ -270,8 +270,6 @@ list.innerHTML = rows.length
     `).join("")
   : empty("Le calendrier sera publié dès que les dates et adversaires seront confirmés.");
 
-  : empty("Le calendrier sera publié dès que les dates et adversaires seront confirmés.");
-
 const toggle = $("#matchListToggle");
 
 if (toggle) {
