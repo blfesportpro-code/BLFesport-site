@@ -1,0 +1,5 @@
+
+User-agent: *
+Allow: /
+
+Sitemap: https://blfesportpro-code.github.io/BLFesport-site/sitemap.xml
