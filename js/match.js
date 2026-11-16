@@ -281,7 +281,7 @@ list.innerHTML = rows.length
 const toggle = $("#matchListToggle");
 
 if (toggle) {
-  toggle.style.display = rows.length > 3 ? "" : "none";
+toggle.style.display = rows.length > 3 ? "" : "none";
   toggle.textContent = showAllMatches
     ? "Réduire ↑"
     : "Voir tous les matchs ↓";
