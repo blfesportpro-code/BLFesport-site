@@ -769,6 +769,7 @@ function renderStaff() {
     const revealTargets = [
       ".hero-copy",
       ".hero-visual",
+      ".hero-logo-frame",
       ".section-heading",
       ".news-card",
       ".next-match",
