@@ -1194,3 +1194,42 @@ main p {
     align-self: center;
   }
 }
+
+
+/* BLFesport — affichage mobile des matchs */
+@media (max-width: 760px) {
+  .match-row {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-rows: auto auto auto;
+    gap: 10px 12px !important;
+    align-items: center;
+  }
+
+  .match-date {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .match-teams {
+    grid-column: 1;
+    grid-row: 2;
+    min-width: 0;
+  }
+
+  .match-extra {
+    grid-column: 1;
+    grid-row: 3;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px 12px;
+    line-height: 1.5;
+    min-width: 0;
+  }
+
+  .match-status {
+    grid-column: 2;
+    grid-row: 1 / 4;
+    justify-self: end;
+  }
+}
