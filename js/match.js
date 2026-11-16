@@ -232,7 +232,7 @@ let showAllMatches = false;
 
       list.innerHTML = rows.length
   ? rows.map((match, index) => `
-      <div class="match-row" ${index >= 3 && !showAllMatches ? "hidden" : ""}>
+    <div class="match-row" ${index >= 3 && !showAllMatches ? "hidden" : ""}>
             <div class="match-row">
               <div class="match-date">${esc(formatDate(match.date))}</div>
               <div>
