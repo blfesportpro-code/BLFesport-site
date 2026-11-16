@@ -1155,3 +1155,42 @@ main p {
   color: #cbb8ff;
   border-color: #9b7bff66;
 }
+
+/* Correction affichage mobile — informations des matchs */
+@media (max-width: 760px) {
+  .match-row {
+    grid-template-columns: 1fr auto;
+    gap: 8px 12px;
+    padding: 14px 10px;
+  }
+
+  .match-date {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .match-teams {
+    grid-column: 1;
+    grid-row: 2;
+    flex-wrap: wrap;
+  }
+
+  .match-row > .match-info:first-of-type {
+    grid-column: 1;
+    grid-row: 3;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.5;
+  }
+
+  .match-row > .match-info:nth-of-type(2) {
+    grid-column: 1;
+    grid-row: 4;
+  }
+
+  .match-status {
+    grid-column: 2;
+    grid-row: 1 / 5;
+    align-self: center;
+  }
+}
