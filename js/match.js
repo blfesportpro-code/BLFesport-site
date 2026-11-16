@@ -225,10 +225,10 @@ let showAllMatches = false;
         .filter(match => match.status === "finished")
         .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-      const rows = [
-        ...upcoming.slice(0, 4),
-        ...recent.slice(0, 3)
-      ];
+     const rows = [
+  ...upcoming,
+  ...recent
+];
 
       list.innerHTML = rows.length
   ? rows.map((match, index) => `
