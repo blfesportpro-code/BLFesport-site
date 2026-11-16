@@ -230,47 +230,45 @@ let showAllMatches = false;
   ...recent
 ];
 
-      list.innerHTML = rows.length
+    list.innerHTML = rows.length
   ? rows.map((match, index) => `
-    <div class="match-row" ${index >= 3 && !showAllMatches ? "hidden" : ""}>
-            <div class="match-row">
-              <div class="match-date">${esc(formatDate(match.date))}</div>
-              <div>
-                <div class="match-opponent">
-                  ${match.isDiscordEvent ? "" : "BLFesport vs "}
-                  ${esc(match.opponent || "Adversaire à confirmer")}
-                </div>
-                <div class="match-info">
-                  ${esc(match.roster || "Roster à confirmer")} ·
-                  ${esc(match.competition || "Compétition à confirmer")}
-                </div>
-              </div>
-              <div class="match-info">${esc(match.format || "Format à confirmer")}</div>
-              <span class="match-status ${match.status === "finished" ? "result" : ""}">
-                ${
-                  match.status === "finished"
-                    ? esc(match.result || "Résultat à renseigner")
-                    : "À venir"
-                }
-              </span>
-            </div>
-          `).join("")
-        : empty("Le calendrier sera publié dès que les dates et adversaires seront confirmés.");
-      const toggle = $("#matchListToggle");
+      <div class="match-row" style="${index >= 3 && !showAllMatches ? "display:none;" : ""}">
+        <div class="match-date">${esc(formatDate(match.date))}</div>
+        <div>
+          <div class="match-opponent">
+            ${match.isDiscordEvent ? "" : "BLFesport vs "}
+            ${esc(match.opponent || "Adversaire à confirmer")}
+          </div>
+          <div class="match-info">
+            ${esc(match.roster || "Roster à confirmer")} ·
+            ${esc(match.competition || "Compétition à confirmer")}
+          </div>
+        </div>
+        <div class="match-info">${esc(match.format || "Format à confirmer")}</div>
+        <span class="match-status ${match.status === "finished" ? "result" : ""}">
+          ${
+            match.status === "finished"
+              ? esc(match.result || "Résultat à renseigner")
+              : "À venir"
+          }
+        </span>
+      </div>
+    `).join("")
+  : empty("Le calendrier sera publié dès que les dates et adversaires seront confirmés.");
+
+const toggle = $("#matchListToggle");
 
 if (toggle) {
+  toggle.style.display = rows.length > 3 ? "" : "none";
   toggle.textContent = showAllMatches
     ? "Réduire ↑"
     : "Voir tous les matchs ↓";
-
-  toggle.hidden = rows.length <= 3;
 
   toggle.onclick = () => {
     showAllMatches = !showAllMatches;
     renderMatches();
   };
 }
-    }
 
     const stats = $("#seasonStats");
 
