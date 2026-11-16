@@ -762,6 +762,32 @@ function renderStaff() {
       });
     });
 
+      /* =========================
+       ANIMATIONS AU DÉFILEMENT
+    ========================= */
+
+    const revealTargets = [
+      ".hero-copy",
+      ".hero-visual",
+      ".section-heading",
+      ".news-card",
+      ".next-match",
+      ".match-row",
+      ".stat-box",
+      ".roster-card",
+      ".media-card",
+      ".video-card",
+      ".staff-card",
+      ".partner-card",
+      ".shop-card",
+      ".community-panel",
+      ".supporter-card",
+      ".decal-content",
+      ".supporters-community",
+      ".live-event-box",
+      ".home-result-card"
+    ].join(", ");
+
     if ("IntersectionObserver" in window) {
       const observer = new IntersectionObserver(entries => {
         entries.forEach(entry => {
@@ -770,14 +796,33 @@ function renderStaff() {
             observer.unobserve(entry.target);
           }
         });
-      }, { threshold: 0.08 });
-
-      document.querySelectorAll(".hero-copy, .hero-visual").forEach(element => {
-        element.classList.add("reveal");
-        observer.observe(element);
+      }, {
+        threshold: 0.08,
+        rootMargin: "0px 0px -35px 0px"
       });
+
+      const observeRevealElements = () => {
+        document.querySelectorAll(revealTargets).forEach(element => {
+          if (!element.classList.contains("reveal")) {
+            element.classList.add("reveal");
+            observer.observe(element);
+          }
+        });
+      };
+
+      observeRevealElements();
+
+      const mutationObserver = new MutationObserver(() => {
+        observeRevealElements();
+      });
+
+      mutationObserver.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
+
     } else {
-      document.querySelectorAll(".reveal").forEach(element => {
+      document.querySelectorAll(revealTargets).forEach(element => {
         element.classList.add("visible");
       });
     }
