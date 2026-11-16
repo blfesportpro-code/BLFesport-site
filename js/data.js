@@ -110,7 +110,7 @@ window.BLF_DATA = {
     date: "2026-11-15T15:00:00",
     roster: "Roster ACADEMIQUE",
     opponent: "Shadow esport",
-    opponentLogo: "",
+    opponentLogo: "assets/shadow.png",
     type: "official",
     format: "BO5",
     streamUrl: "",
