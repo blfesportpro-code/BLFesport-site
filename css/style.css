@@ -579,9 +579,6 @@ section,
    Accueil préservé
 ========================================= */
 
-/* Polices */
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap');
-
 /* Pages intérieures uniquement */
 .hero:has(.hero-content) {
   display: block;
