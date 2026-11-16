@@ -115,7 +115,7 @@ window.BLF_DATA = {
     roster: "Roster ACADEMIQUE",
     opponent: "Shadow esport",
     opponentLogo: "assets/shadow.png",
-    replayUrl: "",
+    replayUrl: "https://youtu.be/8BbcXd8PteI",
     type: "official",
     format: "BO5",
     streamUrl: "",
