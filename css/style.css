@@ -1308,17 +1308,20 @@ main p {
   }
 }
 
-/* Espacement des informations de match sur PC */
+/* BLFesport — informations des matchs sur PC */
 @media (min-width: 761px) {
   .match-extra {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px 16px;
     align-items: center;
-    line-height: 1.6;
+    gap: 12px;
+    white-space: nowrap;
+    font-size: 11px;
+    color: #a99bb5;
   }
 
-  .match-extra span {
-    display: inline-block;
+  .match-extra span + span::before {
+    content: "·";
+    color: #c77aff;
+    margin-right: 12px;
   }
 }
