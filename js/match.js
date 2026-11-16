@@ -260,7 +260,15 @@ list.innerHTML = rows.length
           ${esc(match.format || "Format à confirmer")}
         </div>
 
-        <span class="match-status ${match.status === "finished" ? "result" : ""}">
+       <span class="match-status ${
+  match.status === "finished"
+    ? (Number(String(match.result).split(/[-–:]/)[0]) > Number(String(match.result).split(/[-–:]/)[1])
+        ? "win"
+        : Number(String(match.result).split(/[-–:]/)[0]) < Number(String(match.result).split(/[-–:]/)[1])
+          ? "loss"
+          : "draw")
+    : ""
+}">
           ${match.status === "finished"
             ? esc(match.result || "Résultat à renseigner")
             : "À venir"}
