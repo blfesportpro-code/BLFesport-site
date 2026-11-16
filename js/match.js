@@ -233,12 +233,19 @@ let showAllMatches = false;
     list.innerHTML = rows.length
   ? rows.map((match, index) => `
       <div class="match-row" style="${index >= 3 && !showAllMatches ? "display:none;" : ""}">
-        <div class="match-date">${esc(formatDate(match.date))}</div>
-        <div>
-          <div class="match-opponent">
-            ${match.isDiscordEvent ? "" : "BLFesport vs "}
-            ${esc(match.opponent || "Adversaire à confirmer")}
-          </div>
+       <div class="match-date">${esc(formatDate(match.date))}</div>
+
+<div class="match-teams">
+  <div class="match-team-logo">
+    <img src="assets/blflogo.png" alt="BLFesport">
+  </div>
+
+  <div class="match-team-name">
+    <strong>BLFesport</strong>
+    <span>VS</span>
+    <strong>${esc(match.opponent || "Adversaire à confirmer")}</strong>
+  </div>
+</div>
           <div class="match-info">
             ${esc(match.roster || "Roster à confirmer")} ·
             ${esc(match.competition || "Compétition à confirmer")}
