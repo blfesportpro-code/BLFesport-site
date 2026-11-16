@@ -243,15 +243,24 @@ list.innerHTML = rows.length
   </div>
 
   <div class="match-teams">
-    <div class="match-team-logo">
-      <img src="assets/blflogo.png" alt="BLFesport">
-    </div>
-    <div class="match-team-name">
-      <strong>BLFesport</strong>
-      <span>VS</span>
-      <strong>${esc(match.opponent || "Adversaire à confirmer")}</strong>
-    </div>
+  <div class="match-team-logo">
+    <img src="assets/blflogo.png" alt="BLFesport">
   </div>
+
+  <div class="match-team-name">
+    <strong>BLFesport</strong>
+    <span>VS</span>
+    <strong>${esc(match.opponent || "Adversaire à confirmer")}</strong>
+  </div>
+
+  <div class="match-opponent-logo">
+    <img
+      src="${esc(match.opponentLogo || "assets/nologo.png")}"
+      alt="Logo ${esc(match.opponent || "adversaire")}"
+      onerror="this.onerror=null;this.src='assets/nologo.png';"
+    >
+  </div>
+</div>
 
   <div class="match-info match-extra">
     <span>${esc(match.roster || "Roster à confirmer")}</span>
