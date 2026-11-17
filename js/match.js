@@ -103,11 +103,31 @@ function parseDiscordDate(value) {
   ).toISOString();
 }
 
-  function activeMatches() {
+    function activeMatches() {
     const local = (data.matches || [])
       .filter(match => !match.example);
 
-    return [...local, ...discordMatches];
+    const newDiscordMatches = discordMatches.filter(discordMatch => {
+      return !local.some(localMatch => {
+        const sameOpponent =
+          String(localMatch.opponent || "").trim().toLowerCase() ===
+          String(discordMatch.opponent || "").trim().toLowerCase();
+
+        const sameResult =
+          String(localMatch.result || "") ===
+          String(discordMatch.result || "");
+
+        const sameDate =
+          Math.abs(
+            new Date(localMatch.date).getTime() -
+            new Date(discordMatch.date).getTime()
+          ) < 60000;
+
+        return sameOpponent && sameResult && sameDate;
+      });
+    });
+
+    return [...local, ...newDiscordMatches];
   }
 
   function getStats() {
