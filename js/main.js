@@ -742,6 +742,20 @@ function renderStaff() {
 
     const toggle = $("#menuToggle");
     const nav = $("#mainNav");
+    const currentPage = window.location.pathname.split("/").pop() || "index.html";
+
+nav?.querySelectorAll("a").forEach(link => {
+  const linkPage = new URL(link.href, window.location.href).pathname.split("/").pop() || "index.html";
+  const isCurrent = linkPage === currentPage;
+
+  link.classList.toggle("active", isCurrent);
+
+  if (isCurrent) {
+    link.setAttribute("aria-current", "page");
+  } else {
+    link.removeAttribute("aria-current");
+  }
+});
 
     toggle?.addEventListener("click", () => {
       if (!nav) return;
