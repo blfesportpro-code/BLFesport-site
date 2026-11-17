@@ -132,12 +132,28 @@ window.BLF_DATA = {
   tournaments: [],
   videos: [
   {
-    title: "BLFesport is ready for RLCS !",
-    type: "YouTube Short",
-    date: "2025-11-13",
-    url: "https://youtube.com/shorts/qhdDV9Ok0KY?is=NX_V9bI040wOoffe",
-    youtubeId: "qhdDV9Ok0KY",
-    description: "Les meilleurs moments de BLFesport."
+    "title": "REDIFFUSION SCRIM BLFESPORT VS SHADOW ESPORT ! (Rocket League)",
+    "type": "YouTube",
+    "date": "2026-11-16T20:32:03Z",
+    "url": "https://www.youtube.com/watch?v=8BbcXd8PteI",
+    "youtubeId": "8BbcXd8PteI",
+    "description": "Rediffusion du scrim BLFesport VS Shadow Esport du 16/11/2026 !\n\nTwitch : blfesport\nTikTok : blfesport"
+  },
+  {
+    "title": "First scrim Roster ACADEMIQUE ! @Bifyud_ | Twitch @THE👑🤴TUFFSIE🫡 @thelio #rocketleague #gaming",
+    "type": "YouTube",
+    "date": "2026-11-12T14:48:18Z",
+    "url": "https://www.youtube.com/watch?v=utDJWBRPbq8",
+    "youtubeId": "utDJWBRPbq8",
+    "description": ""
+  },
+  {
+    "title": "Le 1er joueur du Roster ACADEMIQUE ! @THE👑🤴TUFFSIE🫡  #rocketleague #fyp #roster #rl #esport",
+    "type": "YouTube",
+    "date": "2026-11-09T10:58:31Z",
+    "url": "https://www.youtube.com/watch?v=Mlg7se0iJwQ",
+    "youtubeId": "Mlg7se0iJwQ",
+    "description": ""
   }
 ],
   staff: [
