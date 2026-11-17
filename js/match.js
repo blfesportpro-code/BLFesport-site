@@ -411,7 +411,7 @@ toggle.style.display = rows.length > 3 ? "" : "none";
     const host = $("#homeResultsGrid");
     if (!host) return;
 
-    const results = (data.matches || [])
+   const results = activeMatches()
       .filter(match => match.status === "finished" && !match.example)
       .sort((a, b) => new Date(b.date) - new Date(a.date))
       .slice(0, 4);
