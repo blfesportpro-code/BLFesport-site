@@ -129,7 +129,7 @@ window.BLF_DATA = {
     roster: "Roster A",
     opponent: "Voltrik esport",
     opponentLogo: "assets/voltrik.png",
-    replayUrl: "",
+    replayUrl: "https://youtu.be/JtMZg3CTTpc",
     type: "official",
     format: "BO7",
     streamUrl: "",
