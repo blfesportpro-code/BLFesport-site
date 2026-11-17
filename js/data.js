@@ -54,7 +54,7 @@ window.BLF_DATA = {
   ],
  matches: [
   {
-    id: "match-3",
+    id: "match-1",
     date: "2026-11-11T15:00:00",
     roster: "Roster ACADEMIQUE",
     opponent: "NOVA esport",
@@ -68,7 +68,7 @@ window.BLF_DATA = {
     example: false
   },
   {
-    id: "match-4",
+    id: "match-2",
     date: "2026-11-14T17:00:00",
     roster: "Roster ACADEMIQUE",
     opponent: "Spiny esport",
@@ -82,7 +82,7 @@ window.BLF_DATA = {
     example: false
   },
   {
-    id: "match-5",
+    id: "match-3",
     date: "2026-11-15T15:00:00",
     roster: "Roster ACADEMIQUE",
     opponent: "Shadow esport",
@@ -96,7 +96,7 @@ window.BLF_DATA = {
     example: false
   },
   {
-    id: "match-6",
+    id: "match-4",
     date: "2026-11-17T21:00:00",
     roster: "Roster A",
     opponent: "Voltrik esport",
