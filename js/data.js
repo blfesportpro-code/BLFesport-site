@@ -60,10 +60,10 @@ window.BLF_DATA = {
     opponent: "NOVA esport",
     opponentLogo: "",
     replayUrl: "",
-    type: "friendly",
+    type: "official",
     format: "BO5",
     streamUrl: "",
-    status: "official",
+    status: "finished",
     result: "3-2",
     example: false
   },
