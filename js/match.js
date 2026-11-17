@@ -57,8 +57,51 @@
     }
   };
 
-  let discordMatches = [];
+ let discordMatches = [];
 let showAllMatches = false;
+
+async function loadDiscordMatches() {
+  try {
+    const response = await fetch(SCRIM_API);
+
+    if (!response.ok) {
+      throw new Error("Erreur API : " + response.status);
+    }
+
+    const matches = await response.json();
+
+    discordMatches = Array.isArray(matches)
+      ? matches.map(match => ({
+          ...match,
+          date: parseDiscordDate(match.date),
+          status: "finished",
+          type: "friendly",
+          competition: "Scrim",
+          format: `BO${match.games?.length || 0}`
+        }))
+      : [];
+
+    render();
+  } catch (error) {
+    console.error("Impossible de charger les résultats Discord :", error);
+  }
+}
+
+function parseDiscordDate(value) {
+  const match = String(value || "").match(
+    /^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{1,2})h(\d{2})$/
+  );
+
+  if (!match) return value;
+
+  return new Date(
+    Number(match[3]),
+    Number(match[2]) - 1,
+    Number(match[1]),
+    Number(match[4]),
+    Number(match[5])
+  ).toISOString();
+}
 
   function activeMatches() {
     const local = (data.matches || [])
