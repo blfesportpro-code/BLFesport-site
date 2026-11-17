@@ -1,0 +1,119 @@
+
+name: Synchronisation YouTube BLFesport
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */6 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  update-videos:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Configurer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Récupérer les dernières vidéos YouTube
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import urllib.parse
+          import urllib.request
+
+          key = os.environ["YOUTUBE_API_KEY"]
+          handle = "@BLFesport"
+
+          def get(url):
+              with urllib.request.urlopen(url) as response:
+                  return json.loads(response.read())
+
+          params = urllib.parse.urlencode({
+              "part": "contentDetails",
+              "forHandle": handle,
+              "key": key
+          })
+          channel = get("https://www.googleapis.com/youtube/v3/channels?" + params)
+          items = channel.get("items", [])
+
+          if not items:
+              raise Exception("Chaîne YouTube introuvable.")
+
+          playlist = items[0]["contentDetails"]["relatedPlaylists"]["uploads"]
+
+          params = urllib.parse.urlencode({
+              "part": "snippet",
+              "playlistId": playlist,
+              "maxResults": 3,
+              "key": key
+          })
+          result = get("https://www.googleapis.com/youtube/v3/playlistItems?" + params)
+
+          videos = []
+          for item in result.get("items", []):
+              snippet = item["snippet"]
+              video_id = snippet["resourceId"]["videoId"]
+              videos.append({
+                  "title": snippet["title"],
+                  "type": "YouTube",
+                  "date": snippet["publishedAt"],
+                  "url": "https://www.youtube.com/watch?v=" + video_id,
+                  "youtubeId": video_id,
+                  "description": snippet.get("description", "")[:300]
+              })
+
+          if not videos:
+              raise Exception("Aucune vidéo trouvée.")
+
+          with open("videos.json", "w", encoding="utf-8") as file:
+              json.dump(videos, file, ensure_ascii=False, indent=2)
+          PY
+
+      - name: Mettre à jour le site
+        run: |
+          python - <<'PY'
+          import json
+          import re
+
+          path = "js/data.js"
+
+          with open(path, encoding="utf-8") as file:
+              content = file.read()
+
+          with open("videos.json", encoding="utf-8") as file:
+              videos = json.load(file)
+
+          replacement = "videos: " + json.dumps(videos, ensure_ascii=False, indent=2) + ","
+
+          updated, count = re.subn(
+              r"videos\s*:\s*\[[\s\S]*?\]\s*,",
+              lambda match: replacement,
+              content,
+              count=1
+          )
+
+          if count != 1:
+              raise Exception("Bloc videos introuvable dans js/data.js.")
+
+          with open(path, "w", encoding="utf-8") as file:
+              file.write(updated)
+          PY
+
+      - name: Publier les modifications
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add js/data.js
+          git diff --cached --quiet || git commit -m "Mise à jour automatique des vidéos YouTube"
+          git push
