@@ -456,6 +456,7 @@ toggle.style.display = rows.length > 3 ? "" : "none";
     renderHomeResults();
   }
 
+   loadDiscordMatches();
   window.BLF_MATCH = {
     getStats,
     render,
