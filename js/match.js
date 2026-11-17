@@ -81,6 +81,8 @@ async function loadDiscordMatches() {
         }))
       : [];
 
+console.log("Résultats Discord chargés :", discordMatches.length);
+    
     render();
   } catch (error) {
     console.error("Impossible de charger les résultats Discord :", error);
