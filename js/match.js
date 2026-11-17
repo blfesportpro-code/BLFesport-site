@@ -4,6 +4,8 @@
   "use strict";
 
   const data = window.BLF_DATA || {};
+  const SCRIM_API =
+  "https://blfesport-scrim-results.enzo-reuziault.workers.dev/api/matches";
   const $ = selector => document.querySelector(selector);
 
   const esc = value =>
