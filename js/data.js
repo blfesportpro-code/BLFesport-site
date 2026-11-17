@@ -58,7 +58,7 @@ window.BLF_DATA = {
     date: "2026-11-11T15:00:00",
     roster: "Roster ACADEMIQUE",
     opponent: "NOVA esport",
-    opponentLogo: "",
+    opponentLogo: "assets/nova.png",
     replayUrl: "",
     type: "official",
     format: "BO5",
