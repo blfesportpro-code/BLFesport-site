@@ -349,7 +349,7 @@ toggle.style.display = rows.length > 3 ? "" : "none";
     const results = (data.matches || [])
       .filter(match => match.status === "finished" && !match.example)
       .sort((a, b) => new Date(b.date) - new Date(a.date))
-      .slice(0, 3);
+      .slice(0, 4);
 
     host.innerHTML = results.length
       ? results.map(match => {
