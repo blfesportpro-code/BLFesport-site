@@ -254,29 +254,9 @@ let discordEvents = [];
 
       const now = Date.now();
 
-      discordMatches = events
-        .filter(event =>
-          event.status === 1 &&
-          event.scheduled_start_time &&
-          new Date(event.scheduled_start_time).getTime() >= now
-        )
-        .map(event => ({
-          id: "discord-" + event.id,
-          date: event.scheduled_start_time,
-          opponent: event.name,
-          competition: "Événement Discord",
-          format: "Événement officiel",
-          roster: "BLFesport",
-          streamUrl: "",
-          status: "upcoming",
-          result: "",
-          example: false,
-          isDiscordEvent: true
-        }))
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
+     
 
       renderLiveEvent();
-window.BLF_MATCH?.setDiscordMatches(discordMatches);
 
     } catch (error) {
       console.error("Synchronisation Discord impossible :", error);
