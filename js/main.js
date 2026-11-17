@@ -172,8 +172,7 @@ const validUrl = value => {
      MATCHS ET ÉVÉNEMENTS
   ========================= */
 
-  let discordMatches = [];
-  let discordEvents = [];
+let discordEvents = [];
 
   function isEventCurrentlyActive(event) {
     const now = Date.now();
