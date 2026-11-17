@@ -122,6 +122,20 @@ window.BLF_DATA = {
     status: "finished",
     result: "1-3",
     example: false
+  },
+  {
+    id: "match-6",
+    date: "2026-11-17T21:00:00",
+    roster: "Roster A",
+    opponent: "Voltrik esport",
+    opponentLogo: "",
+    replayUrl: "",
+    type: "official",
+    format: "BO7",
+    streamUrl: "",
+    status: "finished",
+    result: "2-4",
+    example: false
   }
 ],
  seasonStats: [
