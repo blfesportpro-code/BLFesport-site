@@ -376,13 +376,22 @@ toggle.style.display = rows.length > 3 ? "" : "none";
 
           return `
             <article class="home-result-card">
-              <div class="home-result-teams">
-                <div class="home-result-team"><strong>BLFesport</strong></div>
-                <div class="home-result-score">${esc(score)}</div>
-                <div class="home-result-team">
-                  <strong>${esc(match.opponent || "Adversaire")}</strong>
-                </div>
-              </div>
+             <div class="home-result-teams">
+  <div class="home-result-team">
+    <img src="assets/blflogo.png" alt="Logo BLFesport">
+    <strong>BLFesport</strong>
+  </div>
+
+  <div class="home-result-score">${esc(score)}</div>
+
+  <div class="home-result-team">
+    <img
+      src="${esc(match.opponentLogo || "assets/nologo.png")}"
+      alt="Logo ${esc(match.opponent || "adversaire")}"
+    >
+    <strong>${esc(match.opponent || "Adversaire")}</strong>
+  </div>
+</div>
               <div class="home-result-info">
                 <span>${esc(match.competition || "Compétition")}</span>
                 <span class="home-result-status ${status}">${statusText}</span>
