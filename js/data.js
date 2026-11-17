@@ -128,7 +128,7 @@ window.BLF_DATA = {
     date: "2026-11-17T21:00:00",
     roster: "Roster A",
     opponent: "Voltrik esport",
-    opponentLogo: "",
+    opponentLogo: "assets/voltrik.png",
     replayUrl: "",
     type: "official",
     format: "BO7",
