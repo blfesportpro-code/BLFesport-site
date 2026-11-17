@@ -147,10 +147,9 @@ function parseDiscordDate(value) {
     const baseWins = getBase("Victoires officiels");
     const baseLosses = getBase("Défaites officiels");
 
-    const finished = activeMatches().filter(match =>
+   const finished = activeMatches().filter(match =>
       match.status === "finished" &&
-      !match.example &&
-      match.type !== "friendly"
+      !match.example
     );
 
     let wins = 0;
