@@ -230,7 +230,7 @@ const rows = [
   ...recent
 ];
 
-const visibleRows = showAllMatches ? rows : rows.slice(0, 3);
+const visibleRows = showAllMatches ? rows : rows.slice(0, 4);
 
     
 list.innerHTML = rows.length
