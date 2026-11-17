@@ -54,34 +54,6 @@ window.BLF_DATA = {
   ],
  matches: [
   {
-    id: "match-1",
-    date: "2026-10-31T16:30:00",
-    roster: "Roster A",
-    opponent: "SANS NOM",
-    opponentLogo: "",
-    replayUrl: "",
-    type: "official",
-    format: "BO5",
-    streamUrl: "",
-    status: "finished",
-    result: "3-0",
-    example: false
-  },
-  {
-    id: "match-2",
-    date: "2026-10-31T17:00:00",
-    roster: "Roster A",
-    opponent: "SANS NOM",
-    opponentLogo: "",
-    replayUrl: "",
-    type: "official",
-    format: "BO7",
-    streamUrl: "",
-    status: "finished",
-    result: "4-0",
-    example: false
-  },
-  {
     id: "match-3",
     date: "2026-11-11T15:00:00",
     roster: "Roster ACADEMIQUE",
