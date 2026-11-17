@@ -210,8 +210,8 @@ function parseDiscordDate(value) {
   }
 
   function renderMatches() {
-    const matches = activeMatches()
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
+   const matches = activeMatches()
+  .sort((a, b) => new Date(b.date) - new Date(a.date));
 
     const now = new Date();
 
