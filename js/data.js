@@ -12,6 +12,10 @@ window.BLF_DATA = {
     streamChannel: "https://www.twitch.tv/blfesport",
     youtubeChannel: "https://www.youtube.com/@BLFesport"
   },
+  // Logos des adversaires : nom en minuscules => chemin du fichier image dans assets/opponents/
+  opponentLogos: {
+    // Exemple : "voltrik esport": "assets/opponents/voltrik-esport.png"
+  },
   announcements: [
     {
       id: "welcome",
