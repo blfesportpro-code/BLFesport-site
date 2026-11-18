@@ -1,6 +1,6 @@
 (() => {
   "use strict";
-  const API = "https://blfesport-assistant.YOUR-SUBDOMAIN.workers.dev";
+  const API = "https://blfesport-assistant.enzo-reuziault.workers.dev";
   const root = document.createElement("div");
   root.id = "blf-assistant";
   root.innerHTML = `
