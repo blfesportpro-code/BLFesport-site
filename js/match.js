@@ -220,6 +220,42 @@ function sortMatchesNewestFirst(a, b) {
     });
   }
 
+ function renderMatchDetails(match) {
+  const players = Array.isArray(match.players) ? match.players : [];
+  const games = Array.isArray(match.games) ? match.games : [];
+
+  return `
+    <div class="match-details-panel">
+      <div class="match-details-header">
+        <span>CLASSEMENT</span>
+        <strong>${esc(match.elo || "Non renseigné")}</strong>
+      </div>
+
+      <div class="match-details-section">
+        <h4>JOUEURS PARTICIPANTS</h4>
+        <div class="match-details-players">
+          ${players.map((player, index) => `
+            <span>Joueur ${index + 1} — ${esc(player)}</span>
+          `).join("")}
+        </div>
+      </div>
+
+      <div class="match-details-section">
+        <h4>DÉTAIL DES GAMES</h4>
+        <div class="match-details-games">
+          ${games.map(game => `
+            <div class="match-details-game">
+              <span>${esc(game.game || "Game")}</span>
+              <strong>${esc(game.score || "—")}</strong>
+              ${game.overtime ? "<span>OT</span>" : ""}
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    </div>
+  `;
+}
+  
   function renderMatches() {
    const matches = activeMatches()
   .sort(sortMatchesNewestFirst);
