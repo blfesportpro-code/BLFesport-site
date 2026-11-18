@@ -1891,3 +1891,96 @@ main p {
     width: 110px;
   }
 }
+
+
+/* BLFesport — Cartes de résultats de l'accueil : disposition responsive */
+#homeResultsSection .home-result-teams {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+}
+
+#homeResultsSection .home-result-team {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+#homeResultsSection .home-result-team--opponent {
+  justify-content: flex-end;
+}
+
+#homeResultsSection .home-result-team img,
+#homeResultsSection .home-result-monogram {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+}
+
+#homeResultsSection .home-result-team img {
+  object-fit: contain;
+}
+
+#homeResultsSection .home-result-monogram {
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(179, 75, 255, .45);
+  border-radius: 50%;
+  background: linear-gradient(145deg, #38204b, #17101f);
+  color: #e4c2ff;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+#homeResultsSection .home-result-team strong {
+  min-width: 0;
+  font-size: 15px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+#homeResultsSection .home-result-score {
+  font-size: clamp(27px, 3vw, 36px);
+  line-height: 1;
+  text-align: center;
+}
+
+@media (max-width: 650px) {
+  #homeResultsSection .home-result-card {
+    padding: 20px 16px;
+  }
+
+  #homeResultsSection .home-result-teams {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  #homeResultsSection .home-result-team {
+    gap: 7px;
+  }
+
+  #homeResultsSection .home-result-team--opponent {
+    justify-content: flex-start;
+  }
+
+  #homeResultsSection .home-result-team img,
+  #homeResultsSection .home-result-monogram {
+    width: 32px;
+    height: 32px;
+    flex-basis: 32px;
+  }
+
+  #homeResultsSection .home-result-team strong {
+    font-size: 12px;
+  }
+
+  #homeResultsSection .home-result-score {
+    font-size: 29px;
+  }
+
+  #homeResultsSection .home-result-info {
+    font-size: 11px;
+  }
+}
