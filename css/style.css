@@ -2107,3 +2107,67 @@ main p {
     padding: 9px;
   }
 }
+
+
+/* Correction affichage du Decal BLFesport */
+.decal-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(280px, .9fr);
+  align-items: center;
+  gap: 42px;
+  padding: 48px;
+  text-align: left;
+  border-radius: 8px;
+}
+
+.decal-preview {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 18px;
+}
+
+.decal-preview img {
+  width: 100%;
+  height: auto;
+  max-height: 420px;
+  object-fit: contain;
+}
+
+.decal-content {
+  max-width: none;
+}
+
+.decal-download {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 18px;
+  padding: 15px 24px;
+  border-radius: 5px;
+  color: #fff;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 800;
+  background: linear-gradient(110deg, #7b27b8, #b34bff);
+  border: 1px solid #b66aff;
+  box-shadow: 0 8px 26px #9d2fe52a;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.decal-download:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px #b34bff55;
+}
+
+@media (max-width: 760px) {
+  .decal-section {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 24px 18px;
+  }
+
+  .decal-preview {
+    max-width: 100%;
+  }
+}
