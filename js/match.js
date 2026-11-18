@@ -305,7 +305,9 @@ list.innerHTML = rows.length
 <div class="match-row">
 
   <div class="match-date">
-    ${esc(formatDate(match.date))}
+   ${esc(match.roster === "Roster A" || match.roster === "Roster B" || match.roster === "Roster C"
+  ? formatDateTime(match.date)
+  : formatDate(match.date))}
   </div>
 
   <div class="match-teams">
