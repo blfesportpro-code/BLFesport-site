@@ -48,6 +48,12 @@
         }).format(date);
   };
 
+  const getOpponentLogo = match => {
+    const opponent = String(match?.opponent || "").trim().toLowerCase();
+    const logos = data.opponentLogos || {};
+    return match?.opponentLogo || logos[opponent] || "assets/nologo.png";
+  };
+
   const validUrl = value => {
     try {
       const url = new URL(value, document.baseURI);
@@ -394,7 +400,7 @@ list.innerHTML = rows.length
 
   <div class="match-opponent-logo">
     <img
-      src="${esc(match.opponentLogo || "assets/nologo.png")}"
+      src="${esc(getOpponentLogo(match))}"
       alt="Logo ${esc(match.opponent || "adversaire")}"
       onerror="this.onerror=null;this.src='assets/nologo.png';"
     >
@@ -543,7 +549,7 @@ toggle.style.display = rows.length > 3 ? "" : "none";
 
   <div class="home-result-team">
     <img
-      src="${esc(match.opponentLogo || "assets/nologo.png")}"
+      src="${esc(getOpponentLogo(match))}"
       alt="Logo ${esc(match.opponent || "adversaire")}"
     >
     <strong>${esc(match.opponent || "Adversaire")}</strong>
