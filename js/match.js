@@ -221,7 +221,7 @@ function sortMatchesNewestFirst(a, b) {
 
   function renderMatches() {
    const matches = activeMatches()
-  .sort((a, b) => new Date(b.date) - new Date(a.date));
+  .sort(sortMatchesNewestFirst);
 
     const now = new Date();
 
