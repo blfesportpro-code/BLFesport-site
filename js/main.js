@@ -667,13 +667,23 @@ function renderStaff() {
     const host = $("#socialLinks");
 
     if (host) {
+      const icons = {
+        discord: ["https://cdn.simpleicons.org/discord/5865F2", "Discord"],
+        twitch: ["https://cdn.simpleicons.org/twitch/9146FF", "Twitch"],
+        youtube: ["https://cdn.simpleicons.org/youtube/FF0033", "YouTube"],
+        tiktok: ["https://cdn.simpleicons.org/tiktok/FFFFFF", "TikTok"],
+        instagram: ["https://cdn.simpleicons.org/instagram/E4405F", "Instagram"],
+        x: ["https://cdn.simpleicons.org/x/FFFFFF", "X"]
+      };
+
       host.innerHTML = Object.entries(labels)
         .map(([key, label]) => {
           const url = validUrl(social[key] || "");
+          const icon = icons[key];
 
           return url
-            ? `<a class="social-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(label)} ↗</a>`
-            : `<span class="social-link unavailable">${esc(label)} · À renseigner</span>`;
+            ? `<a class="social-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(label)}" title="${esc(label)}"><img src="${icon[0]}" alt="${esc(label)}" loading="lazy"></a>`
+            : "";
         })
         .join("");
     }
