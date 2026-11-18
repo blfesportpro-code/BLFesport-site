@@ -105,6 +105,16 @@ function parseDiscordDate(value) {
   ).toISOString();
 }
 
+function sortMatchesNewestFirst(a, b) {
+  const dateDifference =
+    new Date(b.date).getTime() - new Date(a.date).getTime();
+
+  if (dateDifference !== 0) return dateDifference;
+
+  return new Date(b.createdAt || 0).getTime() -
+         new Date(a.createdAt || 0).getTime();
+}
+  
     function activeMatches() {
     const local = (data.matches || [])
       .filter(match => !match.example);
