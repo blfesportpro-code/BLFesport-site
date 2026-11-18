@@ -279,7 +279,8 @@ let discordEvents = [];
     const host = $("#rosterGrid");
     if (!host) return;
 
-    const rosterNames = ["ROSTER A", "ROSTER B", "ROSTER C"];
+    const rosterNames = ["ROSTER A", "ROSTER B", "ROSTER ACADEMIQUE"];
+    const rosterKeys = ["ROSTER A", "ROSTER B", "ROSTER C"];
     const localRosters = data.rosters || [];
 
     host.innerHTML = empty("Chargement des équipes BLFesport…");
@@ -304,7 +305,7 @@ let discordEvents = [];
         const roster = localRosters[index] || {};
 
         const players = result.players.filter(player =>
-          player.roster === rosterName
+          player.roster === rosterKeys[index]
         );
 
         return `
