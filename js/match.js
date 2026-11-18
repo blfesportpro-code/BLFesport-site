@@ -397,6 +397,24 @@ list.innerHTML = rows.length
       : "À venir"}
    </span>
 
+  <button
+    type="button"
+    class="match-details-toggle"
+    onclick="
+      const panel = this.nextElementSibling;
+      panel.hidden = !panel.hidden;
+      this.textContent = panel.hidden
+        ? 'EN SAVOIR PLUS'
+        : 'MASQUER LES DÉTAILS';
+    "
+  >
+    EN SAVOIR PLUS
+  </button>
+
+  <div class="match-details-content" hidden>
+    ${renderMatchDetails(match)}
+  </div>
+
   ${
     match.replayUrl && validUrl(match.replayUrl)
       ? (() => {
