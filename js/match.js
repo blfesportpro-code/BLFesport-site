@@ -539,9 +539,10 @@ toggle.style.display = rows.length > 3 ? "" : "none";
 
           const opponentName = String(match.opponent || "Adversaire");
           const opponentKey = opponentName.trim().toLowerCase();
-          const opponentLogo = match.opponentLogo || (data.opponentLogos || {})[opponentKey] || "";
+          const resolvedOpponentLogo = getOpponentLogo(match);
+          const opponentLogo = resolvedOpponentLogo === "assets/nologo.png" ? "" : resolvedOpponentLogo;
           const opponentInitials = opponentName
-            .split(/\\s+/)
+            .split(/\s+/)
             .filter(Boolean)
             .slice(0, 2)
             .map(part => part[0].toUpperCase())
