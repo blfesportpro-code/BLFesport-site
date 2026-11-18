@@ -220,25 +220,43 @@ function sortMatchesNewestFirst(a, b) {
     });
   }
 
- function renderMatchDetails(match) {
+
+function renderMatchDetails(match) {
   const players = Array.isArray(match.players) ? match.players : [];
   const games = Array.isArray(match.games) ? match.games : [];
 
   return `
     <div class="match-details-panel">
+
       <div class="match-details-header">
-        <span>CLASSEMENT</span>
-        <strong>${esc(match.elo || "Non renseigné")}</strong>
+        <div>
+          <span>ADVERSAIRE</span>
+          <strong>${esc(match.opponent || "Non renseigné")}</strong>
+        </div>
+        <div>
+          <span>RÉSULTAT FINAL</span>
+          <strong>${esc(match.result || "—")}</strong>
+        </div>
+        <div>
+          <span>ROSTER</span>
+          <strong>${esc(match.roster || "—")}</strong>
+        </div>
+      </div>
+
+      <div class="match-details-section">
+        <h4>INFORMATIONS DU MATCH</h4>
+        <p>DATE : ${esc(formatDateTime(match.date))}</p>
+        <p>CLASSEMENT : ${esc(match.elo || "Non renseigné")}</p>
       </div>
 
       <div class="match-details-section">
         <h4>JOUEURS PARTICIPANTS</h4>
         <div class="match-details-players">
-         ${players.map(player => `
-  <span class="match-player-name">
-    ${esc(player.name || player.id || player)}
-  </span>
-`).join("")}
+          ${players.map((player, index) => `
+            <span class="match-player-name">
+              ${esc(player.name || player.id || player)}
+            </span>
+          `).join("") || "Aucun joueur renseigné"}
         </div>
       </div>
 
@@ -247,16 +265,18 @@ function sortMatchesNewestFirst(a, b) {
         <div class="match-details-games">
           ${games.map(game => `
             <div class="match-details-game">
-              <span>${esc(game.game || "Game")}</span>
+              <span>GAME ${esc(game.game ?? "—")}</span>
               <strong>${esc(game.score || "—")}</strong>
               ${game.overtime ? "<span>OT</span>" : ""}
             </div>
-          `).join("")}
+          `).join("") || "Aucun score disponible"}
         </div>
       </div>
+
     </div>
   `;
 }
+
   
   function renderMatches() {
    const matches = activeMatches()
