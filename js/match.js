@@ -299,7 +299,7 @@ function sortMatchesNewestFirst(a, b) {
     if (list) {
       const recent = matches
         .filter(match => match.status === "finished")
-        .sort((a, b) => new Date(b.date) - new Date(a.date));
+        .sort(sortMatchesNewestFirst);
 
 const rows = [
   ...upcoming,
