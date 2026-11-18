@@ -58,6 +58,7 @@
   };
 
  let discordMatches = [];
+  let selectedMatchDetails = null;
 let showAllMatches = false;
 
 async function loadDiscordMatches() {
