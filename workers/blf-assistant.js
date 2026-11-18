@@ -14,7 +14,7 @@ function cors(origin) {
   return {
     "Access-Control-Allow-Origin": allowed,
     "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": "Content-Type, X-BLF-Client",
     "Vary": "Origin"
   };
 }
@@ -64,8 +64,10 @@ export default {
     }
 
     const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+    const clientId = request.headers.get("X-BLF-Client") || "";
+    const clientKey = /^[a-z0-9-]{20,64}$/i.test(clientId) ? clientId : ip;
     const limiter = (key) => env.RATE_LIMITER.get(env.RATE_LIMITER.idFromName(key));
-    const clientLimit = await limiter("client:" + ip).fetch("https://limiter/check");
+    const clientLimit = await limiter("client:" + ip + ":" + clientKey).fetch("https://limiter/check");
     const clientResult = await clientLimit.json();
     if (!clientResult.allowed) {
       return json({ error: clientResult.reason, retryAfter: clientResult.retryAfter || 10 }, 429, origin);
