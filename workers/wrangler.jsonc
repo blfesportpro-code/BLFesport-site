@@ -1,8 +1,9 @@
 {
   "$schema": "https://developers.cloudflare.com/workers/wrangler/config-schema.json",
   "name": "blfesport-assistant",
-  "main": "blf-assistant.js",
+  "main": "./blf-assistant.js",
   "compatibility_date": "2026-11-18",
+  "workers_dev": true,
   "ai": { "binding": "AI" },
   "durable_objects": {
     "bindings": [
