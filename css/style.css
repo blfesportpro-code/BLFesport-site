@@ -1846,3 +1846,48 @@ main p {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* BLFesport — Rediffusions des scrims */
+
+.match-replay {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 18px;
+  padding: 12px;
+  background: #17121f;
+  border: 1px solid rgba(190, 120, 255, .2);
+  border-radius: 6px;
+  text-decoration: none;
+  transition: .2s ease;
+}
+
+.match-replay:hover {
+  border-color: #b879ed;
+  background: #21172b;
+}
+
+.match-replay img {
+  width: 150px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.match-replay > span {
+  color: #dfbaff;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.replay-play {
+  margin-right: 8px;
+  color: white;
+}
+
+@media (max-width: 500px) {
+  .match-replay img {
+    width: 110px;
+  }
+}
