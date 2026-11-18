@@ -7,7 +7,7 @@ const ALLOWED_ORIGINS = new Set([
   "https://blfesport.fr",
   "https://www.blfesport.fr"
 ]);
-const MODEL = "@cf/meta/llama-3.1-8b-instruct";
+const MODEL = "@cf/google/gemma-4-26b-a4b-it";
 
 function cors(origin) {
   const allowed = ALLOWED_ORIGINS.has(origin) ? origin : "https://blfesportpro-code.github.io";
@@ -98,9 +98,10 @@ export default {
           { role: "user", content: message }
         ],
         max_tokens: 450,
-        temperature: 0.35
+        temperature: 0.35,
+        chat_template_kwargs: { enable_thinking: false }
       });
-      const answer = result?.response || result?.result?.response || "";
+      const answer = result?.response || result?.result?.response || result?.choices?.[0]?.message?.content || "";
       if (!answer) throw new Error("Réponse IA vide");
       return json({ answer: String(answer).slice(0, 3500) }, 200, origin);
     } catch (error) {
