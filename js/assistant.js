@@ -19,6 +19,11 @@
   const input = form.querySelector("input");
   const messages = root.querySelector(".blf-ai-messages");
   let busy = false;
+  let clientId = localStorage.getItem("blf-ai-client");
+  if (!clientId) {
+    clientId = crypto.randomUUID();
+    localStorage.setItem("blf-ai-client", clientId);
+  }
   function add(text, type) {
     const node = document.createElement("div");
     node.className = "blf-ai-msg " + type;
@@ -42,7 +47,7 @@
     try {
       const response = await fetch(API + "/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-BLF-Client": clientId },
         body: JSON.stringify({ message })
       });
       const data = await response.json();
