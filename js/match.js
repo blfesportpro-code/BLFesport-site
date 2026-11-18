@@ -426,7 +426,7 @@ toggle.style.display = rows.length > 3 ? "" : "none";
 
    const results = activeMatches()
       .filter(match => match.status === "finished" && !match.example)
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .sort(sortMatchesNewestFirst)
       .slice(0, 4);
 
     host.innerHTML = results.length
