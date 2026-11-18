@@ -434,7 +434,7 @@ let discordEvents = [];
               (id ? `https://www.youtube.com/watch?v=${encodeURIComponent(id)}` : "");
 
             const thumbnail = id
-              ? `https://img.youtube.com/vi/${encodeURIComponent(id)}/hqdefault.jpg`
+              ? `https://img.youtube.com/vi/${encodeURIComponent(id)}/maxresdefault.jpg`
               : "";
 
             return `
@@ -442,7 +442,7 @@ let discordEvents = [];
                 ${
                   thumbnail
                     ? `<a class="video-thumb" href="${esc(url)}" target="_blank" rel="noopener noreferrer">
-                         <img loading="lazy" src="${esc(thumbnail)}" alt="${esc(video.title || "Vidéo BLFesport")}">
+                         <img loading="lazy" src="${esc(thumbnail)}" onerror="this.onerror=null;this.src='https://img.youtube.com/vi/${encodeURIComponent(id)}/hqdefault.jpg';" alt="${esc(video.title || "Vidéo BLFesport")}">
                        </a>`
                     : ""
                 }
