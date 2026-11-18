@@ -19,10 +19,15 @@
   const input = form.querySelector("input");
   const messages = root.querySelector(".blf-ai-messages");
   let busy = false;
-  let clientId = localStorage.getItem("blf-ai-client");
-  if (!clientId) {
-    clientId = crypto.randomUUID();
-    localStorage.setItem("blf-ai-client", clientId);
+  let clientId = "";
+  try {
+    clientId = localStorage.getItem("blf-ai-client") || "";
+    if (!clientId) {
+      clientId = (crypto.randomUUID ? crypto.randomUUID() : "blf-" + Math.random().toString(36).slice(2) + Date.now().toString(36));
+      localStorage.setItem("blf-ai-client", clientId);
+    }
+  } catch {
+    clientId = "blf-" + Math.random().toString(36).slice(2) + Date.now().toString(36);
   }
   function add(text, type) {
     const node = document.createElement("div");
@@ -45,14 +50,17 @@
     send.disabled = true;
     const pending = add("Je réfléchis…", "bot pending");
     try {
+      if (API.includes("YOUR-SUBDOMAIN")) {
+        throw new Error("L'assistant n'est pas encore connecté à son serveur Cloudflare. La configuration du serveur reste à terminer.");
+      }
       const response = await fetch(API + "/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-BLF-Client": clientId },
         body: JSON.stringify({ message })
       });
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Impossible d'obtenir une réponse (erreur " + response.status + ").");
       pending.remove();
-      if (!response.ok) throw new Error(data.error || "Impossible d'obtenir une réponse.");
       add(data.answer || "Je n'ai pas réussi à formuler une réponse.", "bot");
     } catch (error) {
       pending.remove();
