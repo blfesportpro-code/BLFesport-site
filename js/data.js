@@ -118,12 +118,20 @@ window.BLF_DATA = {
   tournaments: [],
   videos: [
   {
+    "title": "REDIFFUSION SCRIM BLFESPORT VS VOLTRIK ESPORT ! (Rocket League)",
+    "type": "YouTube",
+    "date": "2026-11-17T21:32:51Z",
+    "url": "https://www.youtube.com/watch?v=JtMZg3CTTpc",
+    "youtubeId": "JtMZg3CTTpc",
+    "description": "Rediffusion du scrim BLFesport VS Voltrik esport du 17/11/2026 !\n\nTwitch : blfesport\nTikTok : blfesport"
+  },
+  {
     "title": "REDIFFUSION SCRIM BLFESPORT VS SHADOW ESPORT ! (Rocket League)",
     "type": "YouTube",
     "date": "2026-11-16T20:32:03Z",
     "url": "https://www.youtube.com/watch?v=8BbcXd8PteI",
     "youtubeId": "8BbcXd8PteI",
-    "description": "Rediffusion du scrim BLFesport VS Shadow Esport du 16/11/2026 !\n\nTwitch : blfesport\nTikTok : blfesport"
+    "description": "Rediffusion du scrim BLFesport VS Shadow Esport du 15/11/2026 !\n\nTwitch : blfesport\nTikTok : blfesport"
   },
   {
     "title": "First scrim Roster ACADEMIQUE ! @Bifyud_ | Twitch @THE👑🤴TUFFSIE🫡 @thelio #rocketleague #gaming",
@@ -131,14 +139,6 @@ window.BLF_DATA = {
     "date": "2026-11-12T14:48:18Z",
     "url": "https://www.youtube.com/watch?v=utDJWBRPbq8",
     "youtubeId": "utDJWBRPbq8",
-    "description": ""
-  },
-  {
-    "title": "Le 1er joueur du Roster ACADEMIQUE ! @THE👑🤴TUFFSIE🫡  #rocketleague #fyp #roster #rl #esport",
-    "type": "YouTube",
-    "date": "2026-11-09T10:58:31Z",
-    "url": "https://www.youtube.com/watch?v=Mlg7se0iJwQ",
-    "youtubeId": "Mlg7se0iJwQ",
     "description": ""
   }
 ],
