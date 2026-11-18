@@ -234,9 +234,11 @@ function sortMatchesNewestFirst(a, b) {
       <div class="match-details-section">
         <h4>JOUEURS PARTICIPANTS</h4>
         <div class="match-details-players">
-          ${players.map((player, index) => `
-            <span>Joueur ${index + 1} — ${esc(player)}</span>
-          `).join("")}
+         ${players.map(player => `
+  <span class="match-player-name">
+    ${esc(player.name || player.id || player)}
+  </span>
+`).join("")}
         </div>
       </div>
 
