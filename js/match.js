@@ -459,7 +459,8 @@ list.innerHTML = rows.length
                target="_blank"
                rel="noopener noreferrer">
               <img
-                src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg"
+                src="https://img.youtube.com/vi/${videoId}/maxresdefault.jpg"
+                onerror="this.onerror=null;this.src='https://img.youtube.com/vi/${videoId}/hqdefault.jpg';"
                 alt="Rediffusion du match"
                 loading="lazy"
               >
