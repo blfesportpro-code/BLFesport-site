@@ -1708,3 +1708,141 @@ main p {
   font-weight: 900;
   letter-spacing: 1px;
 }
+
+
+/* BLFesport — Scrim details premium */
+
+.match-details-panel {
+  margin: 14px 0 18px;
+  padding: 24px;
+  background: linear-gradient(145deg, #17121f, #100d16);
+  border: 1px solid rgba(181, 112, 230, .22);
+  border-radius: 8px;
+}
+
+.match-details-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 12px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.match-details-header > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.match-details-header span,
+.match-details-section h4 {
+  color: #998ba7;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.match-details-header strong {
+  color: #ead8fa;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.match-details-section {
+  margin-top: 24px;
+}
+
+.match-details-section h4 {
+  margin: 0 0 14px;
+}
+
+.match-details-section p {
+  color: #c9bdD2;
+  font-size: 12px;
+  margin: 7px 0;
+}
+
+.match-details-players {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.match-player-name {
+  padding: 10px 15px;
+  background: #21172b;
+  border: 1px solid rgba(190,120,255,.2);
+  border-radius: 5px;
+  color: #eee1fa;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.match-details-games {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.match-details-game {
+  min-height: 76px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: #1d1625;
+  border: 1px solid rgba(190,120,255,.16);
+  border-radius: 5px;
+}
+
+.match-details-game > span:first-child {
+  color: #a99bb5;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.match-details-game strong {
+  color: #f2e7ff;
+  font-size: 19px;
+  font-weight: 900;
+}
+
+.match-details-game span:last-child {
+  color: #d4a0ff;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.match-details-toggle {
+  padding: 11px 18px;
+  background: #21152d;
+  border: 1px solid rgba(190,120,255,.35);
+  border-radius: 4px;
+  color: #dfbaff;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+  transition: .2s ease;
+}
+
+.match-details-toggle:hover {
+  background: #7135a0;
+  color: white;
+  border-color: #bd82ed;
+}
+
+@media (max-width: 600px) {
+  .match-details-panel {
+    padding: 16px;
+  }
+
+  .match-details-header {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .match-details-games {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
