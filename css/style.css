@@ -2201,3 +2201,201 @@ main p {
   object-position: center;
   margin: 0;
 }
+
+
+/* BLFesport — enrichissement des pages Équipes, Staff, Supporters et Boutique */
+.page-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.page-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  min-width: 0;
+  padding: 22px;
+  background: linear-gradient(145deg, #191321, #100d16);
+  border: 1px solid rgba(179, 75, 255, .2);
+  border-radius: 7px;
+}
+
+.page-feature-index {
+  flex: 0 0 auto;
+  color: #c77aff;
+  font: 800 22px/1 "Barlow Condensed", sans-serif;
+}
+
+.page-feature h3,
+.staff-intro-panel h3,
+.shop-coming-copy h3 {
+  margin: 0 0 8px;
+  color: #f4edf9;
+  font: 800 22px/1.05 "Barlow Condensed", sans-serif;
+}
+
+.page-feature p,
+.staff-intro-panel p,
+.shop-coming-copy p {
+  margin: 0;
+  color: #a99caf;
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+.staff-intro-panel,
+.shop-coming-panel {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-top: 34px;
+  padding: 28px;
+  background: linear-gradient(110deg, #241630, #14101a 72%);
+  border: 1px solid rgba(179, 75, 255, .26);
+  border-radius: 8px;
+}
+
+.staff-intro-mark,
+.shop-coming-icon {
+  display: grid;
+  flex: 0 0 76px;
+  width: 76px;
+  height: 76px;
+  place-items: center;
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(179,75,255,.3);
+  border-radius: 8px;
+}
+
+.staff-intro-mark img,
+.shop-coming-icon img {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+}
+
+.staff-intro-panel h3 span,
+.shop-coming-copy h3 span {
+  color: #c77aff;
+}
+
+.staff-intro-panel .eyebrow,
+.shop-coming-copy .eyebrow {
+  display: block;
+  margin-bottom: 9px;
+}
+
+.supporters-partners .section-heading-note {
+  max-width: 300px;
+  margin: 0;
+  color: #a99caf;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.supporters-partners .partner-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.supporters-partners .partner-card {
+  min-height: 190px;
+  padding: 25px;
+  border-style: solid;
+  border-color: rgba(179,75,255,.22);
+  border-radius: 8px;
+  background: linear-gradient(145deg, #191321, #100d16);
+}
+
+.supporters-partners .partner-logo {
+  width: min(100%, 180px);
+  height: 62px;
+  margin-bottom: 18px;
+  filter: none;
+}
+
+.supporters-partners .partner-card strong {
+  font-size: 15px;
+}
+
+.supporters-partners .partner-card p {
+  max-width: 320px;
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+.supporters-partners .partner-card a {
+  margin-top: 12px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.supporters-ways {
+  padding-top: 25px;
+}
+
+.shop-coming-panel {
+  justify-content: space-between;
+  margin-top: 30px;
+}
+
+.shop-coming-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.shop-coming-copy p {
+  max-width: 680px;
+}
+
+.shop-coming-panel > .button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .page-feature-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .page-feature {
+    padding: 18px;
+  }
+
+  .staff-intro-panel,
+  .shop-coming-panel {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 17px;
+    padding: 22px;
+  }
+
+  .staff-intro-mark,
+  .shop-coming-icon {
+    width: 58px;
+    height: 58px;
+    flex-basis: 58px;
+  }
+
+  .shop-coming-panel > .button {
+    width: 100%;
+    white-space: normal;
+  }
+
+  .supporters-partners .section-heading {
+    display: block;
+  }
+
+  .supporters-partners .section-heading-note {
+    margin-top: 12px;
+  }
+}
+
+@media (min-width: 761px) {
+  .team-features .page-feature {
+    min-height: 132px;
+  }
+}
