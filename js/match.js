@@ -537,24 +537,34 @@ toggle.style.display = rows.length > 3 ? "" : "none";
                 ? "ÉGALITÉ"
                 : "TERMINÉ";
 
+          const opponentName = String(match.opponent || "Adversaire");
+          const opponentKey = opponentName.trim().toLowerCase();
+          const opponentLogo = match.opponentLogo || (data.opponentLogos || {})[opponentKey] || "";
+          const opponentInitials = opponentName
+            .split(/\\s+/)
+            .filter(Boolean)
+            .slice(0, 2)
+            .map(part => part[0].toUpperCase())
+            .join("");
+
           return `
             <article class="home-result-card">
-             <div class="home-result-teams">
-  <div class="home-result-team">
-    <img src="assets/blflogo.png" alt="Logo BLFesport">
-    <strong>BLFesport</strong>
-  </div>
+              <div class="home-result-teams">
+                <div class="home-result-team home-result-team--blf">
+                  <img src="assets/blflogo.webp" alt="Logo BLFesport">
+                  <strong>BLFesport</strong>
+                </div>
 
-  <div class="home-result-score">${esc(score)}</div>
+                <div class="home-result-score">${esc(score)}</div>
 
-  <div class="home-result-team">
-    <img
-      src="${esc(getOpponentLogo(match))}"
-      alt="Logo ${esc(match.opponent || "adversaire")}"
-    >
-    <strong>${esc(match.opponent || "Adversaire")}</strong>
-  </div>
-</div>
+                <div class="home-result-team home-result-team--opponent">
+                  ${opponentLogo
+                    ? `<img src="${esc(opponentLogo)}" alt="Logo ${esc(opponentName)}">`
+                    : `<span class="home-result-monogram" aria-hidden="true">${esc(opponentInitials || "?")}</span>`
+                  }
+                  <strong>${esc(opponentName)}</strong>
+                </div>
+              </div>
               <div class="home-result-info">
                 <span>${esc(match.competition || "Compétition")}</span>
                 <span class="home-result-status ${status}">${statusText}</span>
