@@ -1984,3 +1984,83 @@ main p {
     font-size: 11px;
   }
 }
+
+
+/* Accueil uniquement — correction ferme des cartes résultats */
+#homeResultsSection .home-results-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+#homeResultsSection .home-result-card {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+#homeResultsSection .home-result-teams {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+  align-items: center;
+  gap: 12px;
+}
+
+#homeResultsSection .home-result-team {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#homeResultsSection .home-result-team--opponent {
+  justify-content: flex-end;
+}
+
+#homeResultsSection .home-result-team strong {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: clamp(12px, 1.4vw, 16px);
+  line-height: 1.2;
+}
+
+#homeResultsSection .home-result-team img,
+#homeResultsSection .home-result-monogram {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+}
+
+#homeResultsSection .home-result-score {
+  font-size: clamp(26px, 4vw, 38px);
+  white-space: nowrap;
+  line-height: 1;
+}
+
+@media (max-width: 650px) {
+  #homeResultsSection .home-result-card {
+    padding: 20px 14px;
+  }
+
+  #homeResultsSection .home-result-teams {
+    gap: 7px;
+  }
+
+  #homeResultsSection .home-result-team {
+    gap: 6px;
+  }
+
+  #homeResultsSection .home-result-team img,
+  #homeResultsSection .home-result-monogram {
+    width: 30px;
+    height: 30px;
+    flex-basis: 30px;
+  }
+
+  #homeResultsSection .home-result-team strong {
+    font-size: 11px;
+  }
+
+  #homeResultsSection .home-result-score {
+    font-size: 25px;
+  }
+}
