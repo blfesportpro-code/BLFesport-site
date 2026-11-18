@@ -1,0 +1,61 @@
+(() => {
+  "use strict";
+  const API = "https://blfesport-assistant.YOUR-SUBDOMAIN.workers.dev";
+  const root = document.createElement("div");
+  root.id = "blf-assistant";
+  root.innerHTML = `
+    <button class="blf-ai-launch" type="button" aria-label="Ouvrir l'assistant BLFesport"><span class="blf-ai-mark">BLF</span><span class="blf-ai-launch-label">Assistant</span></button>
+    <section class="blf-ai-panel" aria-label="Assistant BLFesport" hidden>
+      <header class="blf-ai-head"><div><strong>BLF Assistant</strong><small>Assistant officiel BLFesport</small></div><button class="blf-ai-close" type="button" aria-label="Fermer">×</button></header>
+      <div class="blf-ai-messages" aria-live="polite"><div class="blf-ai-msg bot">Salut ! Je suis l'assistant BLFesport. Que veux-tu savoir sur nos équipes, nos matchs ou notre organisation ?</div></div>
+      <form class="blf-ai-form"><input maxlength="1000" autocomplete="off" placeholder="Écris ton message..." aria-label="Ton message" required><button type="submit" aria-label="Envoyer">➤</button></form>
+      <div class="blf-ai-foot">Les réponses peuvent contenir des erreurs. Vérifie les informations importantes sur notre Discord.</div>
+    </section>`;
+  document.body.appendChild(root);
+  const panel = root.querySelector(".blf-ai-panel");
+  const launch = root.querySelector(".blf-ai-launch");
+  const close = root.querySelector(".blf-ai-close");
+  const form = root.querySelector("form");
+  const input = form.querySelector("input");
+  const messages = root.querySelector(".blf-ai-messages");
+  let busy = false;
+  function add(text, type) {
+    const node = document.createElement("div");
+    node.className = "blf-ai-msg " + type;
+    node.textContent = text;
+    messages.appendChild(node);
+    messages.scrollTop = messages.scrollHeight;
+    return node;
+  }
+  launch.addEventListener("click", () => { panel.hidden = false; launch.hidden = true; input.focus(); });
+  close.addEventListener("click", () => { panel.hidden = true; launch.hidden = false; });
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+    const message = input.value.trim();
+    if (!message || busy) return;
+    add(message, "user");
+    input.value = "";
+    busy = true;
+    const send = form.querySelector("button");
+    send.disabled = true;
+    const pending = add("Je réfléchis…", "bot pending");
+    try {
+      const response = await fetch(API + "/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message })
+      });
+      const data = await response.json();
+      pending.remove();
+      if (!response.ok) throw new Error(data.error || "Impossible d'obtenir une réponse.");
+      add(data.answer || "Je n'ai pas réussi à formuler une réponse.", "bot");
+    } catch (error) {
+      pending.remove();
+      add(error.message || "Le serveur est momentanément indisponible.", "bot error");
+    } finally {
+      busy = false;
+      send.disabled = false;
+      input.focus();
+    }
+  });
+})();
