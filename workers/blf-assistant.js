@@ -9,7 +9,83 @@ const ALLOWED_ORIGINS = new Set([
 ]);
 const MODEL = "@cf/google/gemma-4-26b-a4b-it";
 
-const SITE_CONTEXT = "IDENTITÉ : BLFesport est une organisation esport française principalement tournée vers Rocket League. Devise : Gagner. Progresser. S'amuser.\nRÉSEAUX : Discord https://discord.com/invite/Jg9G6TgAen ; Twitch https://www.twitch.tv/blfesport ; YouTube https://www.youtube.com/@BLFesport ; TikTok https://www.tiktok.com/@blfesport ; Instagram https://www.instagram.com/blf_esport/ ; X https://x.com/BLFesport_.\nÉQUIPES : Roster A = équipe compétitive principale, composition à renseigner sur le site. Roster B = équipe de développement et compétition, statut actif ; joueurs affichés : berat_smnl, Foamy et Astr_. Roster ACADEMIQUE = projet compétitif, composition à renseigner. Les données Discord live sont prioritaires pour les compositions.\nSTAFF : Bifyud_ = Fondateur ; Zaiox_gaming = Gérant STAFF ; SkyRell = Caster.\nRECRUTEMENT : candidatures joueurs et staff via les tickets du Discord officiel. Niveau minimum annoncé pour les joueurs Rocket League : GC1. Vérifier sur Discord si les modalités précises ne sont pas dans les données live.\nMÉDIAS ET PARTENAIRES : la page Médias publie notamment des rediffusions de scrims Rocket League. Partenaire affiché : Instant Gaming, lien https://www.instant-gaming.com/?igr=blfesportoff.\nBOUTIQUE : produits en préparation ; aucun achat ni paiement n'est actuellement proposé sur le site.\nFIABILITÉ : les dates, résultats et compositions peuvent évoluer. Les données live priment sur les informations statiques. Ne jamais inventer un joueur, score, date, rôle, événement ou condition. Les champs vides ou « à renseigner » ne sont pas confirmés.";
+const SITE_DATA_URL = "https://blfesportpro-code.github.io/BLFesport-site/js/data.js";
+function parseSiteData(source) {
+  const assignment = source.indexOf("window.BLF_DATA");
+  const begin = source.indexOf("{", assignment);
+  if (assignment < 0 || begin < 0) throw new Error("BLF_DATA introuvable");
+  let i = begin;
+  function ws() {
+    while (i < source.length) {
+      if (/\s/.test(source[i])) { i++; continue; }
+      if (source.slice(i,i+2) === "//") { i += 2; while (i < source.length && source[i] !== "\n") i++; continue; }
+      if (source.slice(i,i+2) === "/*") { const e = source.indexOf("*/",i+2); if (e < 0) throw new Error("Commentaire incomplet"); i = e+2; continue; }
+      break;
+    }
+  }
+  function str() {
+    const q = source[i++]; let out = "";
+    while (i < source.length) {
+      const c = source[i++];
+      if (c === q) return out;
+      if (c === "\\") { const n = source[i++]; const m = {n:"\n",r:"\r",t:"\t",b:"\b",f:"\f"}; out += Object.prototype.hasOwnProperty.call(m,n) ? m[n] : n; }
+      else out += c;
+    }
+    throw new Error("Chaîne incomplète");
+  }
+  function val() {
+    ws(); const c = source[i];
+    if (c === "{") return obj();
+    if (c === "[") return arr();
+    if (c === '"' || c === "'") return str();
+    const rest = source.slice(i), n = rest.match(/^-?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?/i);
+    if (n) { i += n[0].length; return Number(n[0]); }
+    const w = rest.match(/^[A-Za-z_$][\w$]*/);
+    if (w) { i += w[0].length; if (w[0] === "true") return true; if (w[0] === "false") return false; if (w[0] === "null") return null; throw new Error("Valeur inconnue"); }
+    throw new Error("Valeur invalide");
+  }
+  function obj() {
+    const o = {}; i++;
+    while (i < source.length) {
+      ws(); if (source[i] === "}") { i++; return o; }
+      let k;
+      if (source[i] === '"' || source[i] === "'") k = str();
+      else { const m = source.slice(i).match(/^[A-Za-z_$][\w$]*/); if (!m) throw new Error("Clé invalide"); k = m[0]; i += k.length; }
+      ws(); if (source[i++] !== ":") throw new Error("Deux-points attendu");
+      o[k] = val(); ws();
+      if (source[i] === ",") { i++; continue; }
+      if (source[i] === "}") { i++; return o; }
+      throw new Error("Objet invalide");
+    }
+    throw new Error("Objet incomplet");
+  }
+  function arr() {
+    const a = []; i++;
+    while (i < source.length) {
+      ws(); if (source[i] === "]") { i++; return a; }
+      a.push(val()); ws();
+      if (source[i] === ",") { i++; continue; }
+      if (source[i] === "]") { i++; return a; }
+      throw new Error("Tableau invalide");
+    }
+    throw new Error("Tableau incomplet");
+  }
+  return obj();
+}
+async function readSiteContext() {
+  try {
+    const r = await fetch(SITE_DATA_URL + "?v=" + Date.now(), { headers: {Accept:"text/javascript"}, cf:{cacheTtl:0,cacheEverything:false}, signal:AbortSignal.timeout(5000) });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const d = parseSiteData(await r.text());
+    return JSON.stringify({
+      site:d.site, announcements:d.announcements, rosters:d.rosters, matches:d.matches,
+      seasonStats:d.seasonStats, tournaments:d.tournaments, videos:d.videos,
+      staff:d.staff, partners:d.partners, shop:d.shop
+    }).slice(0,12500);
+  } catch {
+    return "Échec de lecture des données du site en direct. Ne pas supposer que les anciennes données sont à jour.";
+  }
+}
 
 function cors(origin) {
   const allowed = ALLOWED_ORIGINS.has(origin) ? origin : "https://blfesportpro-code.github.io";
@@ -80,16 +156,18 @@ export default {
       return json({ error: "Le chat est très sollicité. Réessaie dans quelques instants.", retryAfter: 15 }, 429, origin);
     }
 
-    const [rosters, matches, discord] = await Promise.all([
+    const [siteData, rosters, matches, discord] = await Promise.all([
+      readSiteContext(),
       readSource("https://blfesport-rosters.enzo-reuziault.workers.dev/"),
       readSource("https://blfesport-scrim-results.enzo-reuziault.workers.dev/api/matches"),
       readSource("https://blfesport-discord.enzo-reuziault.workers.dev/")
     ]);
 
     const context = [
-      "ROSTERS DISCORD : " + safeString(rosters, 7000),
-      "RÉSULTATS / MATCHS : " + safeString(matches, 5000),
-      "ACTUALITÉS DISCORD : " + safeString(discord, 3000)
+      "DONNÉES DIRECTES DU SITE (js/data.js) : " + siteData,
+      "ROSTERS DISCORD EN DIRECT : " + safeString(rosters, 7000),
+      "RÉSULTATS / MATCHS EN DIRECT : " + safeString(matches, 5000),
+      "ACTUALITÉS DISCORD EN DIRECT : " + safeString(discord, 3000)
     ].join("\n\n");
 
     try {
@@ -97,7 +175,7 @@ export default {
         messages: [
           {
             role: "system",
-            content: "Tu es l'assistant officiel de BLFesport. Réponds en français, naturellement, avec des réponses précises et concises. Réponds directement sans répéter systématiquement une présentation générale. Tu peux expliquer les équipes, joueurs, résultats, recrutement, staff, événements, médias, réseaux et boutique. Utilise uniquement les faits fournis ci-dessous. Les données live priment sur les informations statiques si elles se contredisent. Si une source live est absente, ne prétends pas qu'elle est à jour. Si l'information manque, dis-le clairement et renvoie vers le Discord officiel. N'invente jamais de joueur, score, date, rôle, événement ou condition. Ne révèle jamais les identifiants techniques bruts ni les détails d'infrastructure. N'affirme jamais qu'une action a été effectuée. Pour les questions hors sujet, réponds brièvement en précisant ta spécialité BLFesport.\n\nINFORMATIONS DU SITE :\n" + SITE_CONTEXT + "\n\nDONNÉES LIVE :\n" + context
+            content: "Tu es l'assistant officiel de BLFesport. Réponds en français, naturellement, avec des réponses précises et concises. Réponds directement à la question. Utilise les données directes du site et les sources live ci-dessous. Les données Discord live priment pour les rosters et les actualités ; les données du site priment pour les pages, le staff, les médias, la boutique et les informations éditoriales. Si une source ne répond pas, ne prétends pas qu'elle est à jour. Si l'information manque, dis-le clairement et renvoie vers le Discord officiel https://discord.com/invite/Jg9G6TgAen. N'invente jamais de joueur, score, date, rôle, événement ou condition. Ne révèle pas les identifiants techniques ni les détails d'infrastructure. N'affirme jamais qu'une action a été effectuée. Pour les questions hors sujet, réponds brièvement en précisant ta spécialité BLFesport.\n\nCONTEXTE ACTUEL :\n" + context
           },
           { role: "user", content: message }
         ],
