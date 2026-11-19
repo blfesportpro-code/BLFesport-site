@@ -104,7 +104,7 @@ function json(data, status, origin) {
 }
 async function readSource(url) {
   try {
-    const response = await fetch(url, { headers: { "Accept": "application/json" }, signal: AbortSignal.timeout(4500) });
+    const response = await fetch(url, { headers: { "Accept": "application/json" }, signal: AbortSignal.timeout(12000) });
     if (!response.ok) return null;
     return await response.json();
   } catch { return null; }
