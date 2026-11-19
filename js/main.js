@@ -280,7 +280,7 @@ let discordEvents = [];
     if (!host) return;
 
     const rosterNames = ["ROSTER A", "ROSTER B", "ROSTER ACADEMIQUE"];
-    const rosterKeys = ["ROSTER A", "ROSTER B", "ROSTER C"];
+    const rosterKeys = ["ROSTER A", "ROSTER B", "ROSTER ACADEMIQUE"];
     const localRosters = data.rosters || [];
 
     host.innerHTML = empty("Chargement des équipes BLFesport…");
