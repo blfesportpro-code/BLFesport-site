@@ -51,7 +51,7 @@
   const getOpponentLogo = match => {
     const opponent = String(match?.opponent || "").trim().toLowerCase();
     const logos = data.opponentLogos || {};
-    return match?.opponentLogo || logos[opponent] || "assets/nologo.png";
+    return logos[opponent] || match?.opponentLogo || "assets/nologo.png";
   };
 
   const validUrl = value => {
