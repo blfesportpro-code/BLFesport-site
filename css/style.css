@@ -2423,3 +2423,57 @@ main p {
 .blf-ai-form button:disabled{opacity:.45;cursor:wait}
 .blf-ai-foot{padding:0 13px 12px;color:#82768c;font-size:9px;line-height:1.5}
 @media(max-width:600px){#blf-assistant{right:14px;bottom:14px}.blf-ai-panel{height:min(550px,calc(100dvh - 90px))}}
+
+
+/* BLFesport — Filtres du calendrier */
+.match-filters {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  margin: 0 0 22px;
+}
+.match-filters-panel {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 16px;
+  padding: 20px;
+  background: linear-gradient(145deg, #191321, #100d16);
+  border: 1px solid rgba(179, 75, 255, .25);
+  border-radius: 7px;
+}
+.match-filters-panel[hidden] { display: none; }
+.match-filters-panel label {
+  display: flex;
+  flex: 1 1 180px;
+  flex-direction: column;
+  gap: 8px;
+  color: #cdbbdc;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.match-filters-panel select {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid rgba(190, 120, 255, .3);
+  border-radius: 4px;
+  background: #17111f;
+  color: #f4edf9;
+  font: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.match-filters-panel select:focus {
+  outline: 1px solid #b34bff;
+  border-color: #b34bff;
+}
+@media (max-width: 600px) {
+  .match-filters-panel { padding: 15px; gap: 12px; }
+  .match-filters-panel label { flex-basis: 100%; }
+  .match-filters-panel > button { width: 100%; }
+}
