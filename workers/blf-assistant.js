@@ -28,6 +28,20 @@ const INITIAL_ROSTER_CACHE = {
 };
 
 const SITE_DATA_URL = "https://blfesportpro-code.github.io/BLFesport-site/js/data.js";
+const SOURCE_CACHE = new Map();
+async function withShortCache(key, ttl, loader) {
+  const now = Date.now();
+  const existing = SOURCE_CACHE.get(key);
+  if (existing && existing.expiresAt > now) return existing.value;
+  const pending = loader().catch(error => {
+    SOURCE_CACHE.delete(key);
+    throw error;
+  });
+  SOURCE_CACHE.set(key, { value: pending, expiresAt: now + ttl });
+  const value = await pending;
+  SOURCE_CACHE.set(key, { value, expiresAt: Date.now() + ttl });
+  return value;
+}
 function parseSiteData(source) {
   const assignment = source.indexOf("window.BLF_DATA");
   const begin = source.indexOf("{", assignment);
@@ -91,18 +105,20 @@ function parseSiteData(source) {
   return obj();
 }
 async function readSiteContext() {
-  try {
-    const r = await fetch(SITE_DATA_URL + "?v=" + Date.now(), { headers: {Accept:"text/javascript"}, cf:{cacheTtl:0,cacheEverything:false}, signal:AbortSignal.timeout(5000) });
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    const d = parseSiteData(await r.text());
-    return JSON.stringify({
-      site:d.site, announcements:d.announcements, rosters:d.rosters, matches:d.matches,
-      seasonStats:d.seasonStats, tournaments:d.tournaments, videos:d.videos,
-      staff:d.staff, partners:d.partners, shop:d.shop
-    }).slice(0,12500);
-  } catch {
-    return "Échec de lecture des données du site en direct. Ne pas supposer que les anciennes données sont à jour.";
-  }
+  return withShortCache("site-context", 15000, async () => {
+    try {
+      const r = await fetch(SITE_DATA_URL, { headers: {Accept:"text/javascript"}, signal:AbortSignal.timeout(5000) });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const d = parseSiteData(await r.text());
+      return JSON.stringify({
+        site:d.site, announcements:d.announcements, rosters:d.rosters, matches:d.matches,
+        seasonStats:d.seasonStats, tournaments:d.tournaments, videos:d.videos,
+        staff:d.staff, partners:d.partners, shop:d.shop
+      }).slice(0,12500);
+    } catch {
+      return "Échec de lecture des données du site en direct. Ne pas supposer que les anciennes données sont à jour.";
+    }
+  });
 }
 
 function cors(origin) {
@@ -121,11 +137,13 @@ function json(data, status, origin) {
   });
 }
 async function readSource(url) {
-  try {
-    const response = await fetch(url, { headers: { "Accept": "application/json" }, signal: AbortSignal.timeout(12000) });
-    if (!response.ok) return null;
-    return await response.json();
-  } catch { return null; }
+  return withShortCache("source:" + url, 15000, async () => {
+    try {
+      const response = await fetch(url, { headers: { "Accept": "application/json" }, signal: AbortSignal.timeout(12000) });
+      if (!response.ok) return null;
+      return await response.json();
+    } catch { return null; }
+  });
 }
 function safeString(value, max = 12000) {
   const text = typeof value === "string" ? value : JSON.stringify(value);
