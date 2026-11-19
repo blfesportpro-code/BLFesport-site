@@ -163,20 +163,29 @@ export default {
       readSource("https://blfesport-discord.enzo-reuziault.workers.dev/")
     ]);
 
+    const rosterNames = ["ROSTER A", "ROSTER B", "ROSTER ACADEMIQUE"];
+    const normalizeRoster = value => {
+      const name = String(value || "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").trim().toUpperCase().replace(/\\s+/g, " ");
+      if (name === "ROSTER C" || name === "ROSTER ACADEMIQUE") return "ROSTER ACADEMIQUE";
+      return name;
+    };
+    const discordPlayers = Array.isArray(rosters?.players) ? rosters.players : [];
+    const groupedPlayers = rosterNames.map(roster => ({
+      roster,
+      joueurs: discordPlayers
+        .filter(player => normalizeRoster(player.roster) === roster)
+        .map(player => player.displayName || player.username || "Joueur")
+    }));
     const discordRosterContext = rosters
       ? JSON.stringify({
-          equipes: ["ROSTER A", "ROSTER B", "ROSTER ACADEMIQUE"],
-          joueurs: (Array.isArray(rosters.players) ? rosters.players : []).map(player => ({
-            ...player,
-            roster: String(player.roster || "").trim().toUpperCase() === "ROSTER C"
-              ? "ROSTER ACADEMIQUE"
-              : String(player.roster || "").trim().toUpperCase()
-          })),
+          source: "Worker des rôles Discord",
+          equipes: groupedPlayers,
+          totalJoueurs: discordPlayers.length,
           updatedAt: rosters.updatedAt || null,
-          stale: rosters.stale === true,
-          warning: rosters.warning || null
+          donneesPerimees: rosters.stale === true,
+          avertissement: rosters.warning || null
         })
-      : "Source des rôles Discord indisponible.";
+      : "ERREUR : le Worker des rôles Discord n'a fourni aucune donnée.";
 
     const context = [
       "DONNÉES DIRECTES DU SITE (js/data.js) : " + siteData,
@@ -190,7 +199,7 @@ export default {
         messages: [
           {
             role: "system",
-            content: "Tu es l'assistant officiel de BLFesport. Réponds en français, naturellement, avec des réponses précises et concises. Réponds directement à la question. Utilise les données directes du site et les sources live ci-dessous. Les données Discord live priment pour les rosters et les actualités. Pour les équipes, utilise d'abord la liste equipes fournie par le Worker Discord, même si une équipe n'a aucun joueur. Pour les compositions, utilise joueurs et associe chaque joueur au rôle de son équipe. Ne confonds pas un roster vide avec une équipe inexistante. Les données du site priment pour les pages, le staff, les médias, la boutique et les informations éditoriales. Si une source ne répond pas, ne prétends pas qu'elle est à jour. Si l'information manque, dis-le clairement et renvoie vers le Discord officiel https://discord.com/invite/Jg9G6TgAen. N'invente jamais de joueur, score, date, rôle, événement ou condition. Ne révèle pas les identifiants techniques ni les détails d'infrastructure. N'affirme jamais qu'une action a été effectuée. Pour les questions hors sujet, réponds brièvement en précisant ta spécialité BLFesport.\n\nCONTEXTE ACTUEL :\n" + context
+            content: "Tu es l'assistant officiel de BLFesport. Réponds en français, naturellement, avec des réponses précises et concises. Réponds directement à la question. Utilise les données directes du site et les sources live ci-dessous. Les données Discord live priment pour les rosters et les actualités. Pour toute question sur les rosters ou les joueurs, lis obligatoirement le bloc ÉQUIPES ET JOUEURS DISCORD EN DIRECT. Il contient les trois équipes déjà regroupées et la liste de leurs joueurs. ROSTER C est l'ancien nom de ROSTER ACADEMIQUE. N'affirme jamais ne pas avoir accès aux compositions si le bloc contient des joueurs. Si donneesPerimees vaut true, précise seulement que les données peuvent ne pas être à jour, mais donne quand même les joueurs présents dans le bloc. Si le bloc indique une erreur, explique que la récupération Discord est momentanément indisponible. Les données du site priment pour les pages, le staff, les médias, la boutique et les informations éditoriales. Si une source ne répond pas, ne prétends pas qu'elle est à jour. Si l'information manque, dis-le clairement et renvoie vers le Discord officiel https://discord.com/invite/Jg9G6TgAen. N'invente jamais de joueur, score, date, rôle, événement ou condition. Ne révèle pas les identifiants techniques ni les détails d'infrastructure. N'affirme jamais qu'une action a été effectuée. Pour les questions hors sujet, réponds brièvement en précisant ta spécialité BLFesport.\n\nCONTEXTE ACTUEL :\n" + context
           },
           { role: "user", content: message }
         ],
