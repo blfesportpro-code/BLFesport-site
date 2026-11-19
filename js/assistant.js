@@ -30,24 +30,21 @@
     clientId = "blf-" + Math.random().toString(36).slice(2) + Date.now().toString(36);
   }
   function renderFormattedText(node, text) {
-    // Rendu Markdown minimal et sécurisé : gras, liens Markdown et URL directes.
-    // Le texte passe par createTextNode ; aucun HTML fourni par le modèle n'est injecté.
-    const pattern = /(\\*\\*([^*]+)\\*\\*|\\[([^\\]]+)\\]\\((https?:\\/\\/[^\\s)]+)\\)|(https?:\\/\\/[^\\s<]+)/g;
+    const pattern = /(\*\*([^*]+)\*\*|\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s<]+))/g;
     let lastIndex = 0;
     let match;
     while ((match = pattern.exec(text)) !== null) {
-      if (match.index > lastIndex) {
-        node.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
-      }
+      if (match.index > lastIndex) node.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
       if (match[2] !== undefined) {
         const strong = document.createElement("strong");
         strong.textContent = match[2];
         node.appendChild(strong);
       } else {
-        const label = match[3] || match[4];
+        const label = match[3] || match[4] || match[5];
         const href = match[4] || match[5];
+        const cleanHref = href.replace(/[.,!?;:]+$/, "");
         const link = document.createElement("a");
-        link.href = href.replace(/[.,!?;:]+$/, "");
+        link.href = cleanHref;
         link.textContent = label.replace(/[.,!?;:]+$/, "");
         link.target = "_blank";
         link.rel = "noopener noreferrer";
@@ -57,14 +54,12 @@
       }
       lastIndex = pattern.lastIndex;
     }
-    if (lastIndex < text.length) {
-      node.appendChild(document.createTextNode(text.slice(lastIndex)));
-    }
+    if (lastIndex < text.length) node.appendChild(document.createTextNode(text.slice(lastIndex)));
   }
   function add(text, type) {
     const node = document.createElement("div");
     node.className = "blf-ai-msg " + type;
-    String(text).split("\\n").forEach((line, index) => {
+    String(text).split("\n").forEach((line, index) => {
       if (index) node.appendChild(document.createElement("br"));
       renderFormattedText(node, line);
     });
