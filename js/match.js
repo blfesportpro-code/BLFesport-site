@@ -48,10 +48,24 @@
         }).format(date);
   };
 
+  const normalizeOpponentName = value =>
+    String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim()
+      .replace(/\s+/g, " ");
+
   const getOpponentLogo = match => {
-    const opponent = String(match?.opponent || "").trim().toLowerCase();
+    const opponent = normalizeOpponentName(match?.opponent);
     const logos = data.opponentLogos || {};
-    return logos[opponent] || match?.opponentLogo || "assets/nologo.png";
+    const manualLogoKey = Object.keys(logos).find(key =>
+      normalizeOpponentName(key) === opponent
+    );
+    return (manualLogoKey ? logos[manualLogoKey] : "") ||
+      match?.opponentLogo ||
+      "assets/nologo.png";
   };
 
   const validUrl = value => {
