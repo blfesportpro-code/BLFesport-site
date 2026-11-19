@@ -300,6 +300,38 @@ function renderMatchDetails(match) {
 }
 
   
+  function initMatchFilters() {
+    const toggle = $("#matchFiltersToggle");
+    const panel = $("#matchFiltersPanel");
+    const selects = ["#matchRosterFilter", "#matchResultFilter", "#matchTypeFilter"]
+      .map(selector => $(selector))
+      .filter(Boolean);
+    const reset = $("#matchFiltersReset");
+
+    if (toggle && panel) {
+      toggle.onclick = () => {
+        panel.hidden = !panel.hidden;
+        toggle.setAttribute("aria-expanded", String(!panel.hidden));
+        toggle.textContent = panel.hidden ? "FILTRER LES MATCHS" : "MASQUER LES FILTRES";
+      };
+    }
+
+    selects.forEach(select => {
+      select.onchange = () => {
+        showAllMatches = false;
+        renderMatches();
+      };
+    });
+
+    if (reset) {
+      reset.onclick = () => {
+        selects.forEach(select => { select.value = "all"; });
+        showAllMatches = false;
+        renderMatches();
+      };
+    }
+  }
+
   function renderMatches() {
    const matches = activeMatches()
   .sort(sortMatchesNewestFirst);
@@ -387,7 +419,36 @@ const rows = [
   ...recent
 ];
 
-const visibleRows = showAllMatches ? rows : rows.slice(0, 3);
+const rosterValue = $("#matchRosterFilter")?.value || "all";
+const resultValue = $("#matchResultFilter")?.value || "all";
+const typeValue = $("#matchTypeFilter")?.value || "all";
+
+const filteredRows = rows.filter(match => {
+  const roster = normalizeOpponentName(match.roster || "");
+  const rosterMatches = rosterValue === "all" ||
+    (rosterValue === "roster academique"
+      ? ["roster academique", "roster c"].includes(roster)
+      : roster === rosterValue);
+
+  const score = String(match.result || "").match(/(\\d+)\\s*[-–:]\\s*(\\d+)/);
+  const result = score
+    ? Number(score[1]) > Number(score[2]) ? "win"
+      : Number(score[1]) < Number(score[2]) ? "loss" : "draw"
+    : "";
+  const resultMatches = resultValue === "all" ||
+    (resultValue === "upcoming"
+      ? match.status !== "finished" && new Date(match.date) >= now
+      : match.status === "finished" && result === resultValue);
+
+  const isScrim = normalizeOpponentName(match.competition || "").includes("scrim") ||
+    normalizeOpponentName(match.type || "") === "friendly";
+  const typeMatches = typeValue === "all" ||
+    (typeValue === "scrim" ? isScrim : !isScrim);
+
+  return rosterMatches && resultMatches && typeMatches;
+});
+
+const visibleRows = showAllMatches ? filteredRows : filteredRows.slice(0, 3);
 
     
 list.innerHTML = rows.length
@@ -487,12 +548,12 @@ list.innerHTML = rows.length
 </div>
 
     `).join("")
-  : empty("Le calendrier sera publié dès que les dates et adversaires seront confirmés.");
+  : empty(rows.length ? "Aucun match ne correspond aux filtres sélectionnés." : "Le calendrier sera publié dès que les dates et adversaires seront confirmés.");
 
 const toggle = $("#matchListToggle");
 
 if (toggle) {
-toggle.style.display = rows.length > 3 ? "" : "none";
+toggle.style.display = filteredRows.length > 3 ? "" : "none";
   toggle.textContent = showAllMatches
     ? "Réduire ↑"
     : "Voir tous les matchs ↓";
