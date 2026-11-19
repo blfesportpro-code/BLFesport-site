@@ -8,6 +8,24 @@ const ALLOWED_ORIGINS = new Set([
   "https://www.blfesport.fr"
 ]);
 const MODEL = "@cf/google/gemma-4-26b-a4b-it";
+const INITIAL_ROSTER_CACHE = {
+  updatedAt: "2026-11-18T02:05:46.830Z",
+  stale: true,
+  warning: "Sauvegarde de secours initiale ; en attente d'une actualisation Discord.",
+  players: [
+    { id: "1152587086856200252", username: "p1n_depice", displayName: "HUGO", roster: "ROSTER A" },
+    { id: "759713940049100821", username: "a4rthurrl", displayName: "KC_a4rthurrl", roster: "ROSTER A" },
+    { id: "562591959181426693", username: "uniity_rdz", displayName: "𝑼𝒏𝒊𝒊𝒕𝒚", roster: "ROSTER A" },
+    { id: "1209830095108186136", username: "elor73", displayName: "Astral7105", roster: "ROSTER B" },
+    { id: "1030938619055198301", username: "b_387", displayName: "B_387", roster: "ROSTER B" },
+    { id: "1488475320796581921", username: "foamy2151", displayName: "𝐹♡𝒶𝓂𝓎", roster: "ROSTER B" },
+    { id: "1475871504821522564", username: "redwanedeal", displayName: "Redwane", roster: "ROSTER B" },
+    { id: "1189878452145373327", username: "kc_noxx", displayName: "NoXx", roster: "ROSTER C" },
+    { id: "1314517363286347819", username: "theli0x", displayName: "Thelio_09", roster: "ROSTER C" },
+    { id: "1547660638464245824", username: "tuffsie3467", displayName: "tuffsie", roster: "ROSTER C" },
+    { id: "1150421316780949615", username: "bifyudgaming", displayName: "Twitch : Bifyud_", roster: "ROSTER C" }
+  ]
+};
 
 const SITE_DATA_URL = "https://blfesportpro-code.github.io/BLFesport-site/js/data.js";
 function parseSiteData(source) {
@@ -187,9 +205,27 @@ export default {
         rosters = Array.isArray(cachedRosters?.players)
           ? { ...cachedRosters, stale: true, cacheFallback: true }
           : liveRosters;
+        if (!Array.isArray(cachedRosters?.players)) {
+          try {
+            await rosterCache.fetch("https://limiter/roster-cache", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(rosters)
+            });
+          } catch {}
+        }
       }
     } else if (Array.isArray(cachedRosters?.players)) {
       rosters = { ...cachedRosters, stale: true, cacheFallback: true };
+    } else {
+      rosters = INITIAL_ROSTER_CACHE;
+      try {
+        await rosterCache.fetch("https://limiter/roster-cache", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(INITIAL_ROSTER_CACHE)
+        });
+      } catch {}
     }
 
     const rosterNames = ["ROSTER A", "ROSTER B", "ROSTER ACADEMIQUE"];
