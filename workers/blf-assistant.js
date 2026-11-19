@@ -185,11 +185,11 @@ export default {
     }
 
     // Réutilise pendant 2 minutes les réponses exactes aux questions non liées aux rosters.
-    const rosterQuestion = /\\b(roster|rosters|composition|compositions|equipe|équipe|équipes|joueurs|joueur)\\b/i.test(message);
+    const isRosterQuestionForCache = /\b(roster|rosters|composition|compositions|equipe|équipe|équipes|joueurs|joueur)\b/i.test(message);
     let answerCacheKey = "";
-    const rosterCache = limiter("global");
-    if (!rosterQuestion) {
-      const normalizedQuestion = message.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase().replace(/\\s+/g, " ").trim();
+    const answerCacheStore = limiter("global");
+    if (!isRosterQuestionForCache) {
+      const normalizedQuestion = message.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
       const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(normalizedQuestion));
       answerCacheKey = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
       try {
