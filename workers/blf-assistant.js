@@ -196,7 +196,7 @@ export default {
 
     // Les compositions sont renvoyées directement depuis Discord pour éviter
     // que le modèle les remplace par les compositions statiques du site.
-    const rosterQuestion = /\\b(roster|rosters|composition|compositions|equipe|équipes|joueurs|joueur)\\b/i.test(message);
+    const rosterQuestion = /\b(roster|rosters|composition|compositions|equipe|équipe|équipes|joueurs|joueur)\b/i.test(message);
     if (rosterQuestion) {
       if (!Array.isArray(rosters?.players)) {
         return json({ answer: "La récupération des compositions Discord est momentanément indisponible. Réessaie un peu plus tard ou consulte le Discord officiel : https://discord.com/invite/Jg9G6TgAen." }, 200, origin);
@@ -205,9 +205,9 @@ export default {
         group.roster + " : " + (group.joueurs.length ? group.joueurs.join(", ") : "Aucun joueur trouvé.")
       );
       const freshness = rosters.stale === true
-        ? "\\n\\nNote : les données Discord disponibles sont anciennes et peuvent ne pas refléter les derniers changements."
+        ? "\\n\nNote : les données Discord disponibles sont anciennes et peuvent ne pas refléter les derniers changements."
         : "";
-      return json({ answer: rosterLines.join("\\n") + freshness }, 200, origin);
+      return json({ answer: rosterLines.join("\n") + freshness }, 200, origin);
     }
 
     try {
