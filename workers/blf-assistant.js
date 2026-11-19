@@ -165,7 +165,7 @@ export default {
 
     const rosterNames = ["ROSTER A", "ROSTER B", "ROSTER ACADEMIQUE"];
     const normalizeRoster = value => {
-      const name = String(value || "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").trim().toUpperCase().replace(/\\s+/g, " ");
+      const name = String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toUpperCase().replace(/\s+/g, " ");
       if (name === "ROSTER C" || name === "ROSTER ACADEMIQUE") return "ROSTER ACADEMIQUE";
       return name;
     };
@@ -193,6 +193,22 @@ export default {
       "RÉSULTATS / MATCHS EN DIRECT : " + safeString(matches, 5000),
       "ACTUALITÉS DISCORD EN DIRECT : " + safeString(discord, 3000)
     ].join("\n\n");
+
+    // Les compositions sont renvoyées directement depuis Discord pour éviter
+    // que le modèle les remplace par les compositions statiques du site.
+    const rosterQuestion = /\\b(roster|rosters|composition|compositions|equipe|équipes|joueurs|joueur)\\b/i.test(message);
+    if (rosterQuestion) {
+      if (!Array.isArray(rosters?.players)) {
+        return json({ answer: "La récupération des compositions Discord est momentanément indisponible. Réessaie un peu plus tard ou consulte le Discord officiel : https://discord.com/invite/Jg9G6TgAen." }, 200, origin);
+      }
+      const rosterLines = groupedPlayers.map(group =>
+        group.roster + " : " + (group.joueurs.length ? group.joueurs.join(", ") : "Aucun joueur trouvé.")
+      );
+      const freshness = rosters.stale === true
+        ? "\\n\\nNote : les données Discord disponibles sont anciennes et peuvent ne pas refléter les derniers changements."
+        : "";
+      return json({ answer: rosterLines.join("\\n") + freshness }, 200, origin);
+    }
 
     try {
       const result = await env.AI.run(MODEL, {
