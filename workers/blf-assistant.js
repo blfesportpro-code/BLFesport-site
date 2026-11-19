@@ -156,12 +156,41 @@ export default {
       return json({ error: "Le chat est très sollicité. Réessaie dans quelques instants.", retryAfter: 15 }, 429, origin);
     }
 
-    const [siteData, rosters, matches, discord] = await Promise.all([
+    // Sauvegarde persistante des compositions dans le stockage du Durable Object.
+    // Elle reste disponible même si le Worker Discord est temporairement indisponible.
+    const rosterCache = limiter("global");
+    let cachedRosters = null;
+    try {
+      const cachedResponse = await rosterCache.fetch("https://limiter/roster-cache");
+      if (cachedResponse.ok) cachedRosters = await cachedResponse.json();
+    } catch {}
+
+    const [siteData, liveRosters, matches, discord] = await Promise.all([
       readSiteContext(),
       readSource("https://blfesport-rosters.enzo-reuziault.workers.dev/"),
       readSource("https://blfesport-scrim-results.enzo-reuziault.workers.dev/api/matches"),
       readSource("https://blfesport-discord.enzo-reuziault.workers.dev/")
     ]);
+
+    let rosters = null;
+    if (Array.isArray(liveRosters?.players)) {
+      if (liveRosters.stale !== true) {
+        rosters = liveRosters;
+        try {
+          await rosterCache.fetch("https://limiter/roster-cache", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(liveRosters)
+          });
+        } catch {}
+      } else {
+        rosters = Array.isArray(cachedRosters?.players)
+          ? { ...cachedRosters, stale: true, cacheFallback: true }
+          : liveRosters;
+      }
+    } else if (Array.isArray(cachedRosters?.players)) {
+      rosters = { ...cachedRosters, stale: true, cacheFallback: true };
+    }
 
     const rosterNames = ["ROSTER A", "ROSTER B", "ROSTER ACADEMIQUE"];
     const normalizeRoster = value => {
@@ -235,8 +264,27 @@ export default {
 export class RateLimiter {
   constructor(ctx) { this.ctx = ctx; }
   async fetch(request) {
-    if (new URL(request.url).pathname !== "/check") return new Response("Not found", { status: 404 });
-    const global = new URL(request.url).searchParams.has("global");
+    const url = new URL(request.url);
+    if (url.pathname === "/roster-cache" && request.method === "GET") {
+      return Response.json(await this.ctx.storage.get("roster-cache") || null);
+    }
+    if (url.pathname === "/roster-cache" && request.method === "PUT") {
+      try {
+        const data = await request.json();
+        if (!data || !Array.isArray(data.players)) {
+          return Response.json({ ok: false, error: "Invalid roster cache" }, { status: 400 });
+        }
+        const current = await this.ctx.storage.get("roster-cache");
+        if (JSON.stringify(current) !== JSON.stringify(data)) {
+          await this.ctx.storage.put("roster-cache", data);
+        }
+        return Response.json({ ok: true });
+      } catch {
+        return Response.json({ ok: false, error: "Invalid JSON" }, { status: 400 });
+      }
+    }
+    if (url.pathname !== "/check") return new Response("Not found", { status: 404 });
+    const global = url.searchParams.has("global");
     const now = Date.now();
     const state = await this.ctx.storage.get("state") || { timestamps: [], last: 0 };
     const timestamps = state.timestamps.filter(t => now - t < (global ? 60000 : 3600000));
