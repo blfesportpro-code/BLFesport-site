@@ -113,6 +113,39 @@
         </div>
       </div>
 
+      <div class="match-filters">
+        <button class="button button-ghost" id="matchFiltersToggle" type="button" aria-expanded="false" aria-controls="matchFiltersPanel">
+          FILTRER LES MATCHS
+        </button>
+        <div class="match-filters-panel" id="matchFiltersPanel" hidden>
+          <label for="matchRosterFilter">Roster
+            <select id="matchRosterFilter">
+              <option value="all">Tous les rosters</option>
+              <option value="roster a">Roster A</option>
+              <option value="roster b">Roster B</option>
+              <option value="roster academique">Roster Académique</option>
+            </select>
+          </label>
+          <label for="matchResultFilter">Résultat
+            <select id="matchResultFilter">
+              <option value="all">Tous les résultats</option>
+              <option value="win">Victoires</option>
+              <option value="loss">Défaites</option>
+              <option value="draw">Égalités</option>
+              <option value="upcoming">Matchs à venir</option>
+            </select>
+          </label>
+          <label for="matchTypeFilter">Type
+            <select id="matchTypeFilter">
+              <option value="all">Tous les types</option>
+              <option value="scrim">Scrims</option>
+              <option value="competition">Compétitions</option>
+            </select>
+          </label>
+          <button type="button" class="button button-ghost" id="matchFiltersReset">Réinitialiser</button>
+        </div>
+      </div>
+
      <div class="match-list" id="matchList">
   <p>Chargement du calendrier...</p>
 </div>
