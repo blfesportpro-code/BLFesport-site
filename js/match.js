@@ -660,6 +660,7 @@ toggle.style.display = filteredRows.length > 3 ? "" : "none";
     renderHomeResults();
   }
 
+   initMatchFilters();
    loadDiscordMatches();
   window.BLF_MATCH = {
     getStats,
