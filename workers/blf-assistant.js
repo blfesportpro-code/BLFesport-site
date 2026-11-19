@@ -165,9 +165,15 @@ export default {
 
     const discordRosterContext = rosters
       ? JSON.stringify({
-          equipes: Array.isArray(rosters.rosters) ? rosters.rosters : [],
-          joueurs: Array.isArray(rosters.players) ? rosters.players : [],
+          equipes: ["ROSTER A", "ROSTER B", "ROSTER ACADEMIQUE"],
+          joueurs: (Array.isArray(rosters.players) ? rosters.players : []).map(player => ({
+            ...player,
+            roster: String(player.roster || "").trim().toUpperCase() === "ROSTER C"
+              ? "ROSTER ACADEMIQUE"
+              : String(player.roster || "").trim().toUpperCase()
+          })),
           updatedAt: rosters.updatedAt || null,
+          stale: rosters.stale === true,
           warning: rosters.warning || null
         })
       : "Source des rôles Discord indisponible.";
