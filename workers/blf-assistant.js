@@ -177,15 +177,7 @@ export default {
       return json({ error: "Le message doit contenir entre 1 et 1 000 caractères." }, 400, origin);
     }
 
-    const ip = request.headers.get("CF-Connecting-IP") || "unknown";
-    const clientId = request.headers.get("X-BLF-Client") || "";
-    const clientKey = /^[a-z0-9-]{20,64}$/i.test(clientId) ? clientId : ip;
     const limiter = (key) => env.RATE_LIMITER.get(env.RATE_LIMITER.idFromName(key));
-    const clientLimit = await limiter("client:" + ip + ":" + clientKey).fetch("https://limiter/check");
-    const clientResult = await clientLimit.json();
-    if (!clientResult.allowed) {
-      return json({ error: clientResult.reason, retryAfter: clientResult.retryAfter || 10 }, 429, origin);
-    }
     const globalLimit = await limiter("global").fetch("https://limiter/check?global=1");
     const globalResult = await globalLimit.json();
     if (!globalResult.allowed) {
@@ -201,7 +193,7 @@ export default {
       const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(normalizedQuestion));
       answerCacheKey = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
       try {
-        const cachedAnswer = await rosterCache.fetch("https://limiter/answer-cache?key=" + answerCacheKey);
+        const cachedAnswer = await answerCacheStore.fetch("https://limiter/answer-cache?key=" + answerCacheKey);
         if (cachedAnswer.ok) {
           const cached = await cachedAnswer.json();
           if (cached?.answer) return json({ answer: cached.answer, cached: true }, 200, origin);
@@ -328,7 +320,7 @@ export default {
       const finalAnswer = String(answer).slice(0, 3500);
       if (answerCacheKey) {
         try {
-          await rosterCache.fetch("https://limiter/answer-cache?key=" + answerCacheKey, {
+          await answerCacheStore.fetch("https://limiter/answer-cache?key=" + answerCacheKey, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ answer: finalAnswer, expiresAt: Date.now() + 120000 })
