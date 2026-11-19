@@ -174,6 +174,23 @@ export default {
       return json({ error: "Le chat est très sollicité. Réessaie dans quelques instants.", retryAfter: 15 }, 429, origin);
     }
 
+    // Réutilise pendant 2 minutes les réponses exactes aux questions non liées aux rosters.
+    const rosterQuestion = /\\b(roster|rosters|composition|compositions|equipe|équipe|équipes|joueurs|joueur)\\b/i.test(message);
+    let answerCacheKey = "";
+    const rosterCache = limiter("global");
+    if (!rosterQuestion) {
+      const normalizedQuestion = message.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase().replace(/\\s+/g, " ").trim();
+      const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(normalizedQuestion));
+      answerCacheKey = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
+      try {
+        const cachedAnswer = await rosterCache.fetch("https://limiter/answer-cache?key=" + answerCacheKey);
+        if (cachedAnswer.ok) {
+          const cached = await cachedAnswer.json();
+          if (cached?.answer) return json({ answer: cached.answer, cached: true }, 200, origin);
+        }
+      } catch {}
+    }
+
     // Sauvegarde persistante des compositions dans le stockage du Durable Object.
     // Elle reste disponible même si le Worker Discord est temporairement indisponible.
     const rosterCache = limiter("global");
@@ -290,7 +307,17 @@ export default {
       });
       const answer = result?.response || result?.result?.response || result?.choices?.[0]?.message?.content || "";
       if (!answer) throw new Error("Réponse IA vide");
-      return json({ answer: String(answer).slice(0, 3500) }, 200, origin);
+      const finalAnswer = String(answer).slice(0, 3500);
+      if (answerCacheKey) {
+        try {
+          await rosterCache.fetch("https://limiter/answer-cache?key=" + answerCacheKey, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ answer: finalAnswer, expiresAt: Date.now() + 120000 })
+          });
+        } catch {}
+      }
+      return json({ answer: finalAnswer }, 200, origin);
     } catch (error) {
       return json({ error: "L'assistant rencontre un problème temporaire. Réessaie dans un instant." }, 502, origin);
     }
@@ -317,6 +344,30 @@ export class RateLimiter {
         return Response.json({ ok: true });
       } catch {
         return Response.json({ ok: false, error: "Invalid JSON" }, { status: 400 });
+      }
+    }
+    if (url.pathname === "/answer-cache" && request.method === "GET") {
+      const key = url.searchParams.get("key") || "";
+      if (!/^[a-f0-9]{64}$/.test(key)) return Response.json(null);
+      const entry = await this.ctx.storage.get("answer:" + key);
+      if (!entry || entry.expiresAt <= Date.now()) {
+        if (entry) await this.ctx.storage.delete("answer:" + key);
+        return Response.json(null);
+      }
+      return Response.json(entry);
+    }
+    if (url.pathname === "/answer-cache" && request.method === "PUT") {
+      const key = url.searchParams.get("key") || "";
+      if (!/^[a-f0-9]{64}$/.test(key)) return Response.json({ ok: false }, { status: 400 });
+      try {
+        const entry = await request.json();
+        if (typeof entry?.answer !== "string" || !Number.isFinite(entry.expiresAt)) {
+          return Response.json({ ok: false }, { status: 400 });
+        }
+        await this.ctx.storage.put("answer:" + key, entry);
+        return Response.json({ ok: true });
+      } catch {
+        return Response.json({ ok: false }, { status: 400 });
       }
     }
     if (url.pathname !== "/check") return new Response("Not found", { status: 404 });
