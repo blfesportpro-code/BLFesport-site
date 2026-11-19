@@ -430,7 +430,7 @@ const filteredRows = rows.filter(match => {
       ? ["roster academique", "roster c"].includes(roster)
       : roster === rosterValue);
 
-  const score = String(match.result || "").match(/(\\d+)\\s*[-–:]\\s*(\\d+)/);
+  const score = String(match.result || "").match(/(\d+)\s*[-–:]\s*(\d+)/);
   const result = score
     ? Number(score[1]) > Number(score[2]) ? "win"
       : Number(score[1]) < Number(score[2]) ? "loss" : "draw"
