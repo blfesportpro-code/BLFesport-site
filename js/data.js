@@ -14,7 +14,10 @@ window.BLF_DATA = {
   },
   // Logos des adversaires : nom en minuscules => chemin du fichier image dans assets/opponents/
   opponentLogos: {
-    // Exemple : "voltrik esport": "assets/opponents/voltrik-esport.png"
+    "nova esport": "assets/nova.png",
+    "spiny esport": "assets/spiny.png",
+    "shadow esport": "assets/shadow.png",
+    "voltrik esport": "assets/voltrik.png"
   },
   announcements: [
     {
