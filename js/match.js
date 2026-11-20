@@ -173,7 +173,6 @@ function activeMatches() {
     let played = 0;
     let wins = 0;
     let losses = 0;
-    let draws = 0;
 
     finished.forEach(match => {
       const score = String(match.result || "")
@@ -186,7 +185,6 @@ function activeMatches() {
 
       if (blf > opponent) wins++;
       else if (blf < opponent) losses++;
-      else draws++;
     });
 
     const percentage = played
@@ -197,7 +195,6 @@ function activeMatches() {
       { label: "Matchs joués", value: played },
       { label: "Victoires", value: wins },
       { label: "Défaites", value: losses },
-      { label: "Égalités", value: draws },
       { label: "Taux de victoire", value: percentage + "%" }
     ];
   }
