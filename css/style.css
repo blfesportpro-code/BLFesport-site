@@ -2477,3 +2477,31 @@ main p {
   .match-filters-panel label { flex-basis: 100%; }
   .match-filters-panel > button { width: 100%; }
 }
+
+
+/* BLFesport — hiérarchie des actualités */
+.news-card-important {
+  border-color: rgba(195, 116, 255, .58);
+  background: linear-gradient(145deg, #281735, #15101d 78%);
+  box-shadow: inset 3px 0 0 #b34bff, 0 8px 28px rgba(117, 42, 160, .12);
+}
+.news-card-important:after { opacity: .48; }
+.news-kind {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 7px;
+  border: 1px solid rgba(255,255,255,.12);
+  color: #a99caf;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+.news-kind-important {
+  border-color: rgba(195,116,255,.42);
+  background: rgba(179,75,255,.13);
+  color: #e3baff;
+}
+.news-card time { font-variant-numeric: tabular-nums; }
+@media (max-width: 760px) {
+  .news-card-important { border-left-width: 3px; }
+}
