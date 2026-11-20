@@ -223,13 +223,11 @@ function activeMatches() {
 
 
 function renderMatchDetails(match) {
-  const players = Array.isArray(match.players) ? match.players : [];
-  const games = Array.isArray(match.games) ? match.games : [];
-  const opponent = match.opponent || "Adversaire non renseigné";
   const rosterKey = normalizeOpponentName(match.roster || "");
   const roster = ["roster c", "roster academique"].includes(rosterKey)
     ? "ROSTER ACADEMIQUE"
     : (match.roster || "Roster non renseigné");
+  const opponent = match.opponent || "Adversaire non renseigné";
   const date = match.date ? new Date(match.date) : null;
   const validDate = date && !Number.isNaN(date.getTime());
   const dateLabel = validDate
@@ -242,34 +240,10 @@ function renderMatchDetails(match) {
         hour: "2-digit", minute: "2-digit"
       }).format(date)
     : "Heure non renseignée";
-  const replayUrl = validUrl(match.replayUrl);
-  const streamUrl = validUrl(match.streamUrl);
   const competition = match.competition || (match.type === "friendly" ? "Scrim" : "");
-  const format = match.format || (games.length ? `BO${games.length}` : "");
+  const format = match.format || "";
   const statusLabel = match.status === "finished" ? "MATCH TERMINÉ" : "MATCH À VENIR";
-
-  const playerNames = players.map(player => {
-    if (typeof player === "string" || typeof player === "number") return String(player);
-    return player?.name || player?.nickname || player?.displayName ||
-      player?.username || player?.id || "Joueur";
-  }).filter(Boolean);
-
-  const gameCards = games.map((game, index) => {
-    const gameNumber = game && typeof game === "object"
-      ? (game.game ?? index + 1)
-      : index + 1;
-    const gameScore = game && typeof game === "object"
-      ? (game.score || game.result || "Score non renseigné")
-      : String(game || "Score non renseigné");
-    const overtime = Boolean(game && typeof game === "object" && game.overtime);
-    return `
-      <div class="match-details-game">
-        <span>GAME ${esc(gameNumber)}</span>
-        <strong>${esc(gameScore)}</strong>
-        ${overtime ? "<span class='match-game-ot'>OVERTIME</span>" : ""}
-      </div>
-    `;
-  }).join("");
+  const result = match.result || (match.status === "finished" ? "Score non renseigné" : "À venir");
 
   return `
     <div class="match-details-panel">
@@ -278,52 +252,15 @@ function renderMatchDetails(match) {
         ${competition ? `<span>${esc(competition)}</span>` : ""}
         ${format ? `<span>${esc(format)}</span>` : ""}
       </div>
-
-      <div class="match-details-scoreboard">
-        <div class="match-details-team">
-          <img src="assets/blflogo.webp" alt="" loading="lazy">
-          <strong>BLFesport</strong>
-        </div>
-        <div class="match-details-final-score">
-          <span>RÉSULTAT FINAL</span>
-          <strong>${esc(match.result || (match.status === "finished" ? "Score non renseigné" : "À venir"))}</strong>
-        </div>
-        <div class="match-details-team match-details-team-opponent">
-          <img src="${esc(getOpponentLogo(match))}" alt="" loading="lazy"
-            onerror="this.onerror=null;this.src='assets/nologo.png';">
-          <strong>${esc(opponent)}</strong>
-        </div>
+      <div class="match-details-simple-result">
+        <strong>${esc(opponent)}</strong>
+        <span>${esc(result)}</span>
       </div>
-
-      <div class="match-details-meta">
-        <div><span>ROSTER</span><strong>${esc(roster)}</strong></div>
-        <div><span>DATE</span><strong>${esc(dateLabel)}</strong></div>
-        <div><span>HEURE</span><strong>${esc(timeLabel)}</strong></div>
-        ${match.elo ? `<div><span>CLASSEMENT</span><strong>${esc(match.elo)}</strong></div>` : ""}
+      <div class="match-details-summary">
+        <span><small>ROSTER</small><strong>${esc(roster)}</strong></span>
+        <span><small>DATE</small><strong>${esc(dateLabel)}</strong></span>
+        <span><small>HEURE</small><strong>${esc(timeLabel)}</strong></span>
       </div>
-
-      <div class="match-details-section">
-        <h4>JOUEURS PARTICIPANTS</h4>
-        <div class="match-details-players">
-          ${playerNames.length
-            ? playerNames.map(name => `<span class="match-player-name">${esc(name)}</span>`).join("")
-            : "<span class='match-details-unavailable'>Les joueurs n'ont pas été renseignés pour ce match.</span>"}
-        </div>
-      </div>
-
-      <div class="match-details-section">
-        <h4>DÉTAIL DES GAMES</h4>
-        <div class="match-details-games">
-          ${gameCards || "<span class='match-details-unavailable'>Les scores de chaque game ne sont pas disponibles.</span>"}
-        </div>
-      </div>
-
-      ${replayUrl || streamUrl ? `
-        <div class="match-details-links">
-          ${replayUrl ? `<a href="${esc(replayUrl)}" target="_blank" rel="noopener noreferrer">VOIR LA REDIFFUSION ↗</a>` : ""}
-          ${streamUrl ? `<a href="${esc(streamUrl)}" target="_blank" rel="noopener noreferrer">ACCÉDER AU STREAM ↗</a>` : ""}
-        </div>
-      ` : ""}
     </div>
   `;
 }
