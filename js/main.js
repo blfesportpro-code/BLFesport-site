@@ -79,42 +79,77 @@ const validUrl = value => {
 
     const cacheKey = "blfesport_discord_announcements_v1";
 
+    const parseNewsDate = value => {
+      if (value === null || value === undefined || value === "") return null;
+      let date;
+      if (typeof value === "number" || /^\d+(\.\d+)?$/.test(String(value).trim())) {
+        let numeric = Number(value);
+        if (!Number.isFinite(numeric)) return null;
+        if (numeric < 1e12) numeric *= 1000;
+        date = new Date(numeric);
+      } else {
+        date = new Date(value);
+      }
+      return Number.isNaN(date.getTime()) ? null : date;
+    };
+
+    const isImportant = value =>
+      value === true || value === 1 ||
+      ["true", "1", "yes", "oui", "important", "priority", "prioritaire"]
+        .includes(String(value ?? "").trim().toLowerCase());
+
     const normalize = items => items.map(item => ({
       title: item.title || item.name || "Annonce Discord",
       description: item.description || item.content || item.message || "",
       date: item.date || item.posted_at || item.created_at || item.timestamp || "",
-      category: item.category || "Discord",
-      important: Boolean(item.important)
+      category: item.category || item.type || "Discord",
+      important: isImportant(item.important ?? item.is_important ?? item.priority)
     }));
 
     const render = items => {
-      const sorted = [...items]
-        .sort((a, b) =>
-          Number(Boolean(b.important)) - Number(Boolean(a.important)) ||
-          String(b.date || "").localeCompare(String(a.date || ""))
-        )
-        .slice(0, 3);
+      const sorted = [...items].sort((a, b) => {
+        if (a.important !== b.important) return Number(b.important) - Number(a.important);
+        const dateA = parseNewsDate(a.date)?.getTime() || 0;
+        const dateB = parseNewsDate(b.date)?.getTime() || 0;
+        return dateB - dateA;
+      }).slice(0, 3);
 
       host.innerHTML = sorted.length
-        ? sorted.map(item => `
-            <article class="news-card">
-              <div class="news-meta">
-                <span class="category-pill">${esc(item.category || "Discord")}</span>
-                ${item.important ? '<span class="important-pill">✦ PRIORITAIRE</span>' : ""}
-              </div>
-              <h3>${esc(item.title || "Annonce BLFesport")}</h3>
-              <p>${esc(item.description || "")}</p>
-              <div class="news-bottom">
-                <span>${esc(formatDate(item.date))}</span>
-                <span class="news-arrow">↗</span>
-              </div>
-            </article>
-          `).join("")
+        ? sorted.map(item => {
+            const date = parseNewsDate(item.date);
+            const dateLabel = date
+              ? new Intl.DateTimeFormat("fr-FR", {
+                  day: "2-digit", month: "long", year: "numeric"
+                }).format(date)
+              : "Date non renseignée";
+            const timeLabel = date
+              ? new Intl.DateTimeFormat("fr-FR", {
+                  hour: "2-digit", minute: "2-digit"
+                }).format(date)
+              : "";
+            return `
+              <article class="news-card${item.important ? " news-card-important" : ""}">
+                <div class="news-meta">
+                  <span class="category-pill">${esc(item.category || "Discord")}</span>
+                  <span class="news-kind${item.important ? " news-kind-important" : ""}">
+                    ${item.important ? "✦ À LA UNE" : "ACTUALITÉ"}
+                  </span>
+                </div>
+                <h3>${esc(item.title || "Annonce BLFesport")}</h3>
+                <p>${esc(item.description || "")}</p>
+                <div class="news-bottom">
+                  <time${date ? ` datetime="${esc(date.toISOString())}"` : ""}>
+                    ${esc(dateLabel)}${timeLabel ? ` · ${esc(timeLabel)}` : ""}
+                  </time>
+                  <span class="news-arrow" aria-hidden="true">↗</span>
+                </div>
+              </article>
+            `;
+          }).join("")
         : empty("Aucune annonce disponible pour le moment.");
     };
 
     let cached = [];
-
     try {
       const saved = JSON.parse(localStorage.getItem(cacheKey) || "[]");
       if (Array.isArray(saved)) cached = saved;
@@ -126,47 +161,35 @@ const validUrl = value => {
       ? data.announcements
       : [];
 
-    render(cached.length ? cached : localAnnouncements);
+    render(cached.length ? cached : normalize(localAnnouncements));
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 12000);
 
     fetch(
       "https://api.dispresso.co/api/espresso/servers/1305208753150365697/site-feed",
-      {
-        signal: controller.signal,
-        cache: "no-store"
-      }
+      { signal: controller.signal, cache: "no-store" }
     )
       .then(response => {
-        if (!response.ok) {
-          throw new Error("Flux Discord indisponible : " + response.status);
-        }
+        if (!response.ok) throw new Error("Flux Discord indisponible : " + response.status);
         return response.json();
       })
       .then(feed => {
-        const announcements =
-          feed.announcements || feed.data?.announcements;
-
+        const announcements = feed.announcements || feed.data?.announcements;
         if (!Array.isArray(announcements) || !announcements.length) {
           throw new Error("Aucune annonce exploitable.");
         }
-
         const items = normalize(announcements);
         render(items);
-
         try {
           localStorage.setItem(cacheKey, JSON.stringify(items));
         } catch (error) {
           console.warn("Impossible de sauvegarder les annonces.", error);
         }
       })
-      .catch(error => {
-        console.warn("Flux Discord indisponible :", error);
-      })
+      .catch(error => console.warn("Flux Discord indisponible :", error))
       .finally(() => clearTimeout(timeout));
   }
-
 
   /* =========================
      MATCHS ET ÉVÉNEMENTS
