@@ -223,6 +223,8 @@ function activeMatches() {
 
 
 function renderMatchDetails(match) {
+  const players = Array.isArray(match.players) ? match.players : [];
+  const games = Array.isArray(match.games) ? match.games : [];
   const rosterKey = normalizeOpponentName(match.roster || "");
   const roster = ["roster c", "roster academique"].includes(rosterKey)
     ? "ROSTER ACADEMIQUE"
@@ -241,9 +243,32 @@ function renderMatchDetails(match) {
       }).format(date)
     : "Heure non renseignée";
   const competition = match.competition || (match.type === "friendly" ? "Scrim" : "");
-  const format = match.format || "";
+  const format = match.format || (games.length ? `BO${games.length}` : "");
   const statusLabel = match.status === "finished" ? "MATCH TERMINÉ" : "MATCH À VENIR";
   const result = match.result || (match.status === "finished" ? "Score non renseigné" : "À venir");
+
+  const playerNames = players.map(player => {
+    if (typeof player === "string" || typeof player === "number") return String(player);
+    return player?.name || player?.nickname || player?.displayName ||
+      player?.username || player?.id || "Joueur";
+  }).filter(Boolean);
+
+  const gameCards = games.map((game, index) => {
+    const gameNumber = game && typeof game === "object"
+      ? (game.game ?? index + 1)
+      : index + 1;
+    const gameScore = game && typeof game === "object"
+      ? (game.score || game.result || "Score non renseigné")
+      : String(game || "Score non renseigné");
+    const overtime = Boolean(game && typeof game === "object" && game.overtime);
+    return `
+      <div class="match-details-game">
+        <span>GAME ${esc(gameNumber)}</span>
+        <strong>${esc(gameScore)}</strong>
+        ${overtime ? "<span class='match-game-ot'>OVERTIME</span>" : ""}
+      </div>
+    `;
+  }).join("");
 
   return `
     <div class="match-details-panel">
@@ -260,6 +285,20 @@ function renderMatchDetails(match) {
         <span><small>ROSTER</small><strong>${esc(roster)}</strong></span>
         <span><small>DATE</small><strong>${esc(dateLabel)}</strong></span>
         <span><small>HEURE</small><strong>${esc(timeLabel)}</strong></span>
+      </div>
+      <div class="match-details-section">
+        <h4>JOUEURS PARTICIPANTS</h4>
+        <div class="match-details-players">
+          ${playerNames.length
+            ? playerNames.map(name => `<span class="match-player-name">${esc(name)}</span>`).join("")
+            : "<span class='match-details-unavailable'>Les joueurs ne sont pas renseignés.</span>"}
+        </div>
+      </div>
+      <div class="match-details-section">
+        <h4>DÉTAIL DES GAMES</h4>
+        <div class="match-details-games">
+          ${gameCards || "<span class='match-details-unavailable'>Les scores des games ne sont pas disponibles.</span>"}
+        </div>
       </div>
     </div>
   `;
