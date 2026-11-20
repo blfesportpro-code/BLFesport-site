@@ -451,7 +451,7 @@ const filteredRows = rows.filter(match => {
 const visibleRows = showAllMatches ? filteredRows : filteredRows.slice(0, 3);
 
     
-list.innerHTML = rows.length
+list.innerHTML = filteredRows.length
   ? visibleRows.map(match => `
 
 <div class="match-row">
