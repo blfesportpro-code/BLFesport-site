@@ -246,55 +246,105 @@ function activeMatches() {
 function renderMatchDetails(match) {
   const players = Array.isArray(match.players) ? match.players : [];
   const games = Array.isArray(match.games) ? match.games : [];
+  const opponent = match.opponent || "Adversaire non renseigné";
+  const rosterKey = normalizeOpponentName(match.roster || "");
+  const roster = ["roster c", "roster academique"].includes(rosterKey)
+    ? "ROSTER ACADEMIQUE"
+    : (match.roster || "Roster non renseigné");
+  const date = match.date ? new Date(match.date) : null;
+  const validDate = date && !Number.isNaN(date.getTime());
+  const dateLabel = validDate
+    ? new Intl.DateTimeFormat("fr-FR", {
+        weekday: "long", day: "2-digit", month: "long", year: "numeric"
+      }).format(date)
+    : "Date non renseignée";
+  const timeLabel = validDate
+    ? new Intl.DateTimeFormat("fr-FR", {
+        hour: "2-digit", minute: "2-digit"
+      }).format(date)
+    : "Heure non renseignée";
+  const replayUrl = validUrl(match.replayUrl);
+  const streamUrl = validUrl(match.streamUrl);
+  const competition = match.competition || (match.type === "friendly" ? "Scrim" : "");
+  const format = match.format || (games.length ? `BO${games.length}` : "");
+  const statusLabel = match.status === "finished" ? "MATCH TERMINÉ" : "MATCH À VENIR";
+
+  const playerNames = players.map(player => {
+    if (typeof player === "string" || typeof player === "number") return String(player);
+    return player?.name || player?.nickname || player?.displayName ||
+      player?.username || player?.id || "Joueur";
+  }).filter(Boolean);
+
+  const gameCards = games.map((game, index) => {
+    const gameNumber = game && typeof game === "object"
+      ? (game.game ?? index + 1)
+      : index + 1;
+    const gameScore = game && typeof game === "object"
+      ? (game.score || game.result || "Score non renseigné")
+      : String(game || "Score non renseigné");
+    const overtime = Boolean(game && typeof game === "object" && game.overtime);
+    return `
+      <div class="match-details-game">
+        <span>GAME ${esc(gameNumber)}</span>
+        <strong>${esc(gameScore)}</strong>
+        ${overtime ? "<span class='match-game-ot'>OVERTIME</span>" : ""}
+      </div>
+    `;
+  }).join("");
 
   return `
     <div class="match-details-panel">
+      <div class="match-details-topline">
+        <span class="match-details-status">${esc(statusLabel)}</span>
+        ${competition ? `<span>${esc(competition)}</span>` : ""}
+        ${format ? `<span>${esc(format)}</span>` : ""}
+      </div>
 
-      <div class="match-details-header">
-        <div>
-          <span>ADVERSAIRE</span>
-          <strong>${esc(match.opponent || "Non renseigné")}</strong>
+      <div class="match-details-scoreboard">
+        <div class="match-details-team">
+          <img src="assets/blflogo.webp" alt="" loading="lazy">
+          <strong>BLFesport</strong>
         </div>
-        <div>
+        <div class="match-details-final-score">
           <span>RÉSULTAT FINAL</span>
-          <strong>${esc(match.result || "—")}</strong>
+          <strong>${esc(match.result || (match.status === "finished" ? "Score non renseigné" : "À venir"))}</strong>
         </div>
-        <div>
-          <span>ROSTER</span>
-          <strong>${esc(match.roster || "—")}</strong>
+        <div class="match-details-team match-details-team-opponent">
+          <img src="${esc(getOpponentLogo(match))}" alt="" loading="lazy"
+            onerror="this.onerror=null;this.src='assets/nologo.png';">
+          <strong>${esc(opponent)}</strong>
         </div>
       </div>
 
-      <div class="match-details-section">
-        <h4>INFORMATIONS DU MATCH</h4>
-        <p>DATE : ${esc(formatDateTime(match.date))}</p>
-        <p>CLASSEMENT : ${esc(match.elo || "Non renseigné")}</p>
+      <div class="match-details-meta">
+        <div><span>ROSTER</span><strong>${esc(roster)}</strong></div>
+        <div><span>DATE</span><strong>${esc(dateLabel)}</strong></div>
+        <div><span>HEURE</span><strong>${esc(timeLabel)}</strong></div>
+        ${match.elo ? `<div><span>CLASSEMENT</span><strong>${esc(match.elo)}</strong></div>` : ""}
       </div>
 
       <div class="match-details-section">
         <h4>JOUEURS PARTICIPANTS</h4>
         <div class="match-details-players">
-          ${players.map((player, index) => `
-            <span class="match-player-name">
-              ${esc(player.name || player.id || player)}
-            </span>
-          `).join("") || "Aucun joueur renseigné"}
+          ${playerNames.length
+            ? playerNames.map(name => `<span class="match-player-name">${esc(name)}</span>`).join("")
+            : "<span class='match-details-unavailable'>Les joueurs n'ont pas été renseignés pour ce match.</span>"}
         </div>
       </div>
 
       <div class="match-details-section">
         <h4>DÉTAIL DES GAMES</h4>
         <div class="match-details-games">
-          ${games.map(game => `
-            <div class="match-details-game">
-              <span>GAME ${esc(game.game ?? "—")}</span>
-              <strong>${esc(game.score || "—")}</strong>
-              ${game.overtime ? "<span>OT</span>" : ""}
-            </div>
-          `).join("") || "Aucun score disponible"}
+          ${gameCards || "<span class='match-details-unavailable'>Les scores de chaque game ne sont pas disponibles.</span>"}
         </div>
       </div>
 
+      ${replayUrl || streamUrl ? `
+        <div class="match-details-links">
+          ${replayUrl ? `<a href="${esc(replayUrl)}" target="_blank" rel="noopener noreferrer">VOIR LA REDIFFUSION ↗</a>` : ""}
+          ${streamUrl ? `<a href="${esc(streamUrl)}" target="_blank" rel="noopener noreferrer">ACCÉDER AU STREAM ↗</a>` : ""}
+        </div>
+      ` : ""}
     </div>
   `;
 }
@@ -508,6 +558,7 @@ list.innerHTML = filteredRows.length
     onclick="
       const panel = this.nextElementSibling;
       panel.hidden = !panel.hidden;
+      this.setAttribute('aria-expanded', String(!panel.hidden));
       this.textContent = panel.hidden
         ? 'EN SAVOIR PLUS'
         : 'MASQUER LES DÉTAILS';
