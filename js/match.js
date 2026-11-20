@@ -245,8 +245,6 @@ function renderMatchDetails(match) {
   const competition = match.competition || (match.type === "friendly" ? "Scrim" : "");
   const format = match.format || (games.length ? `BO${games.length}` : "");
   const statusLabel = match.status === "finished" ? "MATCH TERMINÉ" : "MATCH À VENIR";
-  const result = match.result || (match.status === "finished" ? "Score non renseigné" : "À venir");
-
   const playerNames = players.map(player => {
     if (typeof player === "string" || typeof player === "number") return String(player);
     return player?.name || player?.nickname || player?.displayName ||
@@ -279,7 +277,6 @@ function renderMatchDetails(match) {
       </div>
       <div class="match-details-simple-result">
         <strong>${esc(opponent)}</strong>
-        <span>${esc(result)}</span>
       </div>
       <div class="match-details-summary">
         <span><small>ROSTER</small><strong>${esc(roster)}</strong></span>
