@@ -3,7 +3,7 @@
 (() => {
   "use strict";
 
-  const API_BASE_URL = "https://blfesport-airtable-api.enzo-reuziault.workers.dev";
+  const API_BASE_URL = "";
 
   async function loadMatches() {
     if (!API_BASE_URL) {
