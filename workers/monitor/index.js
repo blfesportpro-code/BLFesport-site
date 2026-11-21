@@ -40,26 +40,33 @@ async function checkTarget(target, url) {
 
     const latencyMs = Date.now() - startedAt;
     const contentType = response.headers.get("content-type") || "";
+    const responseText = await response.text();
     let data = null;
 
     if (contentType.includes("application/json")) {
       try {
-        data = await response.json();
+        data = JSON.parse(responseText);
       } catch {
         data = null;
       }
     }
 
+    const checkedUrl = new URL(url);
     const result = {
       id: target.id,
       name: target.name,
       status: response.ok ? "online" : "error",
       httpStatus: response.status,
+      checkedUrl: checkedUrl.origin + checkedUrl.pathname,
+      responseUrl: response.url,
       latencyMs,
       checkedAt: new Date().toISOString()
     };
 
-    if (!response.ok) result.message = "Le Worker distant a répondu avec une erreur HTTP.";
+    if (!response.ok) {
+      result.message = "Le Worker distant a répondu avec une erreur HTTP.";
+      result.responseBody = responseText.slice(0, 300);
+    }
     if (data && typeof data === "object") {
       if (data.updatedAt) {
         result.updatedAt = data.updatedAt;
