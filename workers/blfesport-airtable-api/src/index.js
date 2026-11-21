@@ -261,6 +261,8 @@ async function linkPreviousSocialRecords(env) {
 const SOCIAL_FIELDS = {
   entry: "fldVAc6U6BHj3Gsj2", period: "fld6lEMD8yfmanPRe",
   platform: "fldCPgNpDnR4pOe5S", followers: "fldJVoRsh5vlSwPqm",
+  newFollowers: "fld5UYbUBilrz7Vpu", views: "fld2Szh4ZElmDcT5j",
+  interactions: "fldQFy3rJPrNaesUX", notes: "fldbjI3G4i9YuuH2U",
   source: "fldZBQ4ubK3Hp8knU",
   status: "fldFgxFaR2y25tjLf", syncedAt: "fldoodNBxf2YBwkcW",
   syncDetail: "fld2MPZ9nTMTU3C4Q"
@@ -296,6 +298,105 @@ async function airtableUpsert(env, tableId, mergeFieldId, records) {
   });
   if (!response.ok) throw new Error(`Airtable upsert ${response.status}: ${(await response.text()).slice(0, 350)}`);
   return (await response.json()).records || [];
+}
+async function youtubeAccessToken(env) {
+  if (!env.YOUTUBE_TOKEN_STORE || !env.YOUTUBE_CLIENT_ID || !env.YOUTUBE_CLIENT_SECRET || !env.YOUTUBE_REDIRECT_URI) {
+    return { skipped: true, reason: "OAuth YouTube incomplet : KV YOUTUBE_TOKEN_STORE, YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET et YOUTUBE_REDIRECT_URI requis." };
+  }
+  const refreshToken = await env.YOUTUBE_TOKEN_STORE.get("refresh_token");
+  if (!refreshToken) return { skipped: true, reason: "Compte propriétaire YouTube non autorisé : ouvrir /oauth/youtube/start." };
+  const cached = await env.YOUTUBE_TOKEN_STORE.get("access_token");
+  if (cached) {
+    const check = await fetch("https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=" + encodeURIComponent(cached));
+    if (check.ok) return { accessToken: cached };
+  }
+  const form = new URLSearchParams({
+    client_id: env.YOUTUBE_CLIENT_ID, client_secret: env.YOUTUBE_CLIENT_SECRET,
+    refresh_token: refreshToken, grant_type: "refresh_token"
+  });
+  const response = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: form
+  });
+  if (!response.ok) throw new Error("Renouvellement OAuth YouTube " + response.status + ": " + (await response.text()).slice(0, 250));
+  const token = await response.json();
+  if (!token.access_token) throw new Error("Google n’a pas renvoyé de jeton YouTube");
+  await env.YOUTUBE_TOKEN_STORE.put("access_token", token.access_token, {
+    expirationTtl: Math.max(60, Number(token.expires_in || 3600) - 120)
+  });
+  return { accessToken: token.access_token };
+}
+function parisDateDaysAgo(days) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit"
+  }).formatToParts(new Date());
+  const y = Number(parts.find(x => x.type === "year")?.value);
+  const m = Number(parts.find(x => x.type === "month")?.value);
+  const d = Number(parts.find(x => x.type === "day")?.value);
+  const date = new Date(Date.UTC(y, m - 1, d - days));
+  return date.toISOString().slice(0, 10);
+}
+async function syncYoutubeAnalytics(env) {
+  const auth = await youtubeAccessToken(env);
+  if (auth.skipped) return auth;
+  const headers = { Authorization: "Bearer " + auth.accessToken };
+  const channelUrl = new URL("https://www.googleapis.com/youtube/v3/channels");
+  channelUrl.searchParams.set("part", "id,snippet");
+  channelUrl.searchParams.set("mine", "true");
+  const channelResponse = await fetch(channelUrl, { headers });
+  if (!channelResponse.ok) throw new Error("Vérification du compte YouTube " + channelResponse.status + ": " + (await channelResponse.text()).slice(0, 250));
+  const channel = (await channelResponse.json()).items?.[0];
+  if (!channel?.id) throw new Error("Aucune chaîne YouTube associée au compte Google autorisé");
+  if (env.YOUTUBE_API_KEY) {
+    const publicUrl = new URL("https://www.googleapis.com/youtube/v3/channels");
+    publicUrl.searchParams.set("part", "id");
+    publicUrl.searchParams.set("forHandle", "@BLFesport");
+    publicUrl.searchParams.set("key", env.YOUTUBE_API_KEY);
+    const publicResponse = await fetch(publicUrl);
+    if (publicResponse.ok) {
+      const expected = (await publicResponse.json()).items?.[0]?.id;
+      if (expected && expected !== channel.id) throw new Error("Le compte Google autorisé ne possède pas la chaîne @BLFesport. Recommence avec le bon compte.");
+    }
+  }
+  const period = currentParisPeriod();
+  const endDate = parisDateDaysAgo(3);
+  if (endDate < period.start) return { skipped: true, reason: "Les données Analytics du mois ne sont pas encore disponibles." };
+  const reportUrl = new URL("https://youtubeanalytics.googleapis.com/v2/reports");
+  reportUrl.searchParams.set("ids", "channel==MINE");
+  reportUrl.searchParams.set("startDate", period.start);
+  reportUrl.searchParams.set("endDate", endDate);
+  reportUrl.searchParams.set("metrics", "views,subscribersGained,likes,comments,shares,estimatedMinutesWatched");
+  const reportResponse = await fetch(reportUrl, { headers });
+  if (!reportResponse.ok) throw new Error("YouTube Analytics API " + reportResponse.status + ": " + (await reportResponse.text()).slice(0, 350));
+  const report = await reportResponse.json();
+  const values = report.rows?.[0] || [];
+  const [views, gained, likes, comments, shares, minutes] = values.map(value => Number(value) || 0);
+  const periodRecords = await airtableUpsert(env, SOCIAL.periods, PERIOD_FIELDS.name, [{
+    [PERIOD_FIELDS.name]: period.name, [PERIOD_FIELDS.start]: period.start,
+    [PERIOD_FIELDS.end]: period.end, [PERIOD_FIELDS.status]: "En cours"
+  }]);
+  if (!periodRecords[0]?.id) throw new Error("Identifiant de période Airtable absent pour Analytics");
+  const fields = {
+    [SOCIAL_FIELDS.entry]: period.name + " — YouTube",
+    [SOCIAL_FIELDS.period]: [periodRecords[0].id],
+    [SOCIAL_FIELDS.platform]: "YouTube",
+    [SOCIAL_FIELDS.newFollowers]: gained,
+    [SOCIAL_FIELDS.views]: views,
+    [SOCIAL_FIELDS.interactions]: likes + comments + shares,
+    [SOCIAL_FIELDS.notes]: "YouTube Analytics du " + period.start + " au " + endDate +
+      " : " + gained + " abonnés gagnés, " + likes + " j’aime, " + comments +
+      " commentaires, " + shares + " partages, " + minutes + " minutes de visionnage.",
+    [SOCIAL_FIELDS.source]: "API",
+    [SOCIAL_FIELDS.status]: "Synchronisée",
+    [SOCIAL_FIELDS.syncedAt]: new Date().toISOString(),
+    [SOCIAL_FIELDS.syncDetail]: "Statistiques mensuelles issues de YouTube Analytics. Les données s’arrêtent au " + endDate +
+      " pour tenir compte du délai de traitement habituel de 48 à 72 heures."
+  };
+  const records = await airtableUpsert(env, SOCIAL.table, SOCIAL_FIELDS.entry, [fields]);
+  return {
+    platform: "YouTube Analytics", period: period.name, through: endDate,
+    views, subscribersGained: gained, likes, comments, shares,
+    estimatedMinutesWatched: minutes, recordId: records[0]?.id || null
+  };
 }
 async function syncYoutubePublicStats(env) {
   if (!env.YOUTUBE_API_KEY) return { platform: "YouTube", skipped: true, reason: "YOUTUBE_API_KEY non configurée" };
@@ -422,6 +523,67 @@ async function handle(request, env) {
   }});
   if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID) return json({ error: "Airtable non configuré" }, 503, corsOrigin);
   const path = new URL(request.url).pathname;
+  if (request.method === "GET" && path === "/oauth/youtube/start") {
+    if (!env.YOUTUBE_TOKEN_STORE || !env.YOUTUBE_CLIENT_ID || !env.YOUTUBE_REDIRECT_URI) return json({ error: "Configuration OAuth YouTube/KV incomplète" }, 503, corsOrigin);
+    const state = crypto.randomUUID();
+    await env.YOUTUBE_TOKEN_STORE.put("oauth_state:" + state, "pending", { expirationTtl: 600 });
+    const authorize = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+    authorize.searchParams.set("client_id", env.YOUTUBE_CLIENT_ID);
+    authorize.searchParams.set("redirect_uri", env.YOUTUBE_REDIRECT_URI);
+    authorize.searchParams.set("response_type", "code");
+    authorize.searchParams.set("scope", "https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/yt-analytics.readonly");
+    authorize.searchParams.set("access_type", "offline");
+    authorize.searchParams.set("prompt", "consent");
+    authorize.searchParams.set("state", state);
+    return Response.redirect(authorize.toString(), 302);
+  }
+  if (request.method === "GET" && path === "/oauth/youtube/callback") {
+    if (!env.YOUTUBE_TOKEN_STORE || !env.YOUTUBE_CLIENT_ID || !env.YOUTUBE_CLIENT_SECRET || !env.YOUTUBE_REDIRECT_URI) return json({ error: "Configuration OAuth YouTube/KV incomplète" }, 503, corsOrigin);
+    const query = new URL(request.url).searchParams;
+    const state = query.get("state");
+    if (!state || await env.YOUTUBE_TOKEN_STORE.get("oauth_state:" + state) !== "pending") return json({ error: "État OAuth YouTube invalide ou expiré" }, 400, corsOrigin);
+    await env.YOUTUBE_TOKEN_STORE.delete("oauth_state:" + state);
+    if (query.get("error")) return json({ error: "Autorisation Google refusée", detail: query.get("error_description") || query.get("error") }, 400, corsOrigin);
+    const code = query.get("code");
+    if (!code) return json({ error: "Code OAuth Google manquant" }, 400, corsOrigin);
+    const form = new URLSearchParams({
+      client_id: env.YOUTUBE_CLIENT_ID, client_secret: env.YOUTUBE_CLIENT_SECRET,
+      code, grant_type: "authorization_code", redirect_uri: env.YOUTUBE_REDIRECT_URI
+    });
+    const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: form
+    });
+    if (!tokenResponse.ok) return json({ error: "Échange OAuth Google impossible", detail: (await tokenResponse.text()).slice(0, 250) }, 502, corsOrigin);
+    const token = await tokenResponse.json();
+    if (!token.access_token || !token.refresh_token) return json({ error: "Google n’a pas fourni de refresh token. Révoque l’accès de l’application puis recommence avec le consentement." }, 400, corsOrigin);
+    const headers = { Authorization: "Bearer " + token.access_token };
+    const channelUrl = new URL("https://www.googleapis.com/youtube/v3/channels");
+    channelUrl.searchParams.set("part", "id,snippet");
+    channelUrl.searchParams.set("mine", "true");
+    const channelResponse = await fetch(channelUrl, { headers });
+    if (!channelResponse.ok) return json({ error: "Impossible de vérifier la chaîne Google autorisée", detail: (await channelResponse.text()).slice(0, 250) }, 502, corsOrigin);
+    const channel = (await channelResponse.json()).items?.[0];
+    if (!channel?.id) return json({ error: "Le compte Google autorisé ne possède aucune chaîne YouTube." }, 403, corsOrigin);
+    if (env.YOUTUBE_API_KEY) {
+      const publicUrl = new URL("https://www.googleapis.com/youtube/v3/channels");
+      publicUrl.searchParams.set("part", "id");
+      publicUrl.searchParams.set("forHandle", "@BLFesport");
+      publicUrl.searchParams.set("key", env.YOUTUBE_API_KEY);
+      const publicResponse = await fetch(publicUrl);
+      if (publicResponse.ok) {
+        const expected = (await publicResponse.json()).items?.[0]?.id;
+        if (expected && expected !== channel.id) return json({ error: "Ce compte Google ne possède pas la chaîne @BLFesport. Connecte le bon compte Google." }, 403, corsOrigin);
+      }
+    }
+    await Promise.all([
+      env.YOUTUBE_TOKEN_STORE.put("refresh_token", token.refresh_token),
+      env.YOUTUBE_TOKEN_STORE.put("access_token", token.access_token, { expirationTtl: Math.max(60, Number(token.expires_in || 3600) - 120) }),
+      env.YOUTUBE_TOKEN_STORE.put("authorized_channel_id", channel.id)
+    ]);
+    return new Response("Connexion YouTube BLFesport réussie. Les statistiques Analytics seront importées lors du prochain passage automatique.", {
+      headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" }
+    });
+  }
   if (request.method === "GET" && path === "/oauth/twitch/start") {
     if (!env.TWITCH_TOKEN_STORE || !env.TWITCH_CLIENT_ID || !env.TWITCH_REDIRECT_URI) return json({ error: "Configuration OAuth Twitch/KV incomplète" }, 503, corsOrigin);
     const state = crypto.randomUUID();
@@ -536,7 +698,7 @@ export default {
   fetch: handle,
   scheduled: async (event, env, ctx) => {
     ctx.waitUntil(
-      Promise.allSettled([syncMatches(env), linkPreviousSocialRecords(env), syncYoutubePublicStats(env), syncTwitchStats(env)])
+      Promise.allSettled([syncMatches(env), linkPreviousSocialRecords(env), syncYoutubePublicStats(env), syncYoutubeAnalytics(env), syncTwitchStats(env)])
         .then(([matches, socialLinks, youtube, twitch]) => {
           if (matches.status === "fulfilled") console.log("BLF_SYNC_OK", JSON.stringify(matches.value));
           else console.error("BLF_SYNC_ERROR", matches.reason?.stack || matches.reason?.message || String(matches.reason));
@@ -544,6 +706,8 @@ export default {
           else console.error("BLF_SOCIAL_LINKS_ERROR", socialLinks.reason?.stack || socialLinks.reason?.message || String(socialLinks.reason));
           if (youtube.status === "fulfilled") console.log("BLF_YOUTUBE_SYNC", JSON.stringify(youtube.value));
           else console.error("BLF_YOUTUBE_SYNC_ERROR", youtube.reason?.stack || youtube.reason?.message || String(youtube.reason));
+          if (youtubeAnalytics.status === "fulfilled") console.log("BLF_YOUTUBE_ANALYTICS_SYNC", JSON.stringify(youtubeAnalytics.value));
+          else console.error("BLF_YOUTUBE_ANALYTICS_ERROR", youtubeAnalytics.reason?.stack || youtubeAnalytics.reason?.message || String(youtubeAnalytics.reason));
           if (twitch.status === "fulfilled") console.log("BLF_TWITCH_SYNC", JSON.stringify(twitch.value));
           else console.error("BLF_TWITCH_SYNC_ERROR", twitch.reason?.stack || twitch.reason?.message || String(twitch.reason));
         })
