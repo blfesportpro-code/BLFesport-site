@@ -78,6 +78,7 @@
   };
 
  let discordMatches = [];
+  let airtableMatches = [];
   let selectedMatchDetails = null;
 let showAllMatches = false;
 
@@ -141,27 +142,21 @@ function activeMatches() {
   const local = (data.matches || [])
     .filter(match => !match.example);
 
-  const localWithoutDiscordDuplicate = local.filter(localMatch => {
-    return !discordMatches.some(discordMatch => {
+  const externalMatches = [...airtableMatches, ...discordMatches];
+  const localWithoutExternalDuplicate = local.filter(localMatch => {
+    return !externalMatches.some(externalMatch => {
       const sameOpponent =
         String(localMatch.opponent || "").trim().toLowerCase() ===
-        String(discordMatch.opponent || "").trim().toLowerCase();
-
-      const sameResult =
-        String(localMatch.result || "") ===
-        String(discordMatch.result || "");
-
-      const sameDate =
-        Math.abs(
-          new Date(localMatch.date).getTime() -
-          new Date(discordMatch.date).getTime()
-        ) < 60000;
-
+        String(externalMatch.opponent || "").trim().toLowerCase();
+      const sameResult = String(localMatch.result || "") === String(externalMatch.result || "");
+      const sameDate = Math.abs(
+        new Date(localMatch.date).getTime() - new Date(externalMatch.date).getTime()
+      ) < 60000;
       return sameOpponent && sameResult && sameDate;
     });
   });
 
-  return [...discordMatches, ...localWithoutDiscordDuplicate];
+  return [...externalMatches, ...localWithoutExternalDuplicate];
 }
 
 
@@ -675,7 +670,17 @@ toggle.style.display = filteredRows.length > 3 ? "" : "none";
     updateCountdown,
     setDiscordMatches(matches) {
       discordMatches = Array.isArray(matches) ? matches : [];
-      renderMatches();
+      render();
+    },
+    setAirtableMatches(matches) {
+      airtableMatches = Array.isArray(matches) ? matches : [];
+      render();
     }
   };
+
+  if (window.BLF_AIRTABLE && typeof window.BLF_AIRTABLE.loadMatches === "function") {
+    window.BLF_AIRTABLE.loadMatches()
+      .then(matches => window.BLF_MATCH.setAirtableMatches(matches))
+      .catch(error => console.warn("Synchronisation Airtable BLFesport indisponible :", error));
+  }
 })();
