@@ -57,13 +57,21 @@ function extractArray(source, marker) {
     const c = source[i];
     if (quoted) {
       if (escaped) escaped = false;
-      else if (c === "\\\\") escaped = true;
+      else if (c === "\\") escaped = true;
       else if (c === '"') quoted = false;
       continue;
     }
     if (c === '"') quoted = true;
     else if (c === "[") depth++;
-    else if (c === "]" && --depth === 0) return JSON.parse(source.slice(start, i + 1));
+    else if (c === "]") {
+      depth--;
+      if (depth === 0) {
+        const literal = source.slice(start, i + 1)
+          .replace(/([{,]\\s*)([A-Za-z_$][\\w$]*)\\s*:/g, '$1"$2":')
+          .replace(/,\\s*([}\\]])/g, "$1");
+        return JSON.parse(literal);
+      }
+    }
   }
   throw new Error("Fin du tableau de matchs non trouvée");
 }
