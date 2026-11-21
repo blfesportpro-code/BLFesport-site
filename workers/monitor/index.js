@@ -179,8 +179,7 @@ async function checkTarget(target, service) {
   }
 }
 
-export default {
-  async fetch(request, env) {
+async function handleRequest(request, env) {
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders() });
     }
@@ -241,5 +240,15 @@ export default {
         "Content-Type": "application/json; charset=utf-8"
       }
     });
+}
+
+export default {
+  async fetch(request, env) {
+    return handleRequest(request, env);
+  },
+  scheduled(controller, env, ctx) {
+    const task = handleRequest(new Request("https://blfesport.internal/health"), env)
+      .catch(error => console.error("BLFesport monitor scheduled check failed:", error));
+    ctx.waitUntil(task);
   }
 };
