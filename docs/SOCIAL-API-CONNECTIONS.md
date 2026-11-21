@@ -43,7 +43,7 @@ Les API ne donnent pas toutes les mêmes métriques. Le système doit enregistre
 ## Pré-requis de déploiement
 
 Le code du Worker devra utiliser un stockage privé persistant pour les jetons OAuth (KV ou D1). Prévoir les secrets/identifiants d'application par plateforme dans les paramètres privés du Worker :
-- YouTube / Google : Client ID, Client Secret, Refresh Token
+- YouTube Data API publique : clé `YOUTUBE_API_KEY` (compteur public d'abonnés). Les rapports privés YouTube Analytics nécessiteront ensuite OAuth propriétaire.
 - Twitch : Client ID, Client Secret, Refresh Token
 - TikTok : Client Key, Client Secret, Refresh Token
 - Meta / Instagram : App ID, App Secret, jeton utilisateur renouvelable
@@ -58,8 +58,10 @@ Les noms définitifs des variables seront fixés dans le code avant le paramétr
 - Le Worker relie automatiquement chaque relevé à celui du mois précédent pour la même plateforme, lorsque le relevé précédent existe.
 - Une route manuelle protégée par `SYNC_SECRET` est disponible : `POST /admin/social-links-sync`.
 - Les comptes ne sont pas encore autorisés par les API.
-- Le Worker actuellement présent synchronise les matchs ; il ne synchronise pas encore les cinq plateformes sociales.
-- La collecte automatique n'est donc pas active à ce stade.
+- Le Worker contient un premier collecteur YouTube public, exécuté par le Cron et appelable via `POST /admin/social-sync/youtube`.
+- Ce collecteur met à jour le relevé du mois avec le compteur public d'abonnés, si `YOUTUBE_API_KEY` est configurée. Il ne transforme pas les vues ou vidéos cumulées en statistiques mensuelles.
+- Les collecteurs Twitch, TikTok, Instagram et X ne sont pas encore développés. YouTube n'est pas opérationnel tant que la clé API n'est pas configurée et que le déploiement n'a pas été validé.
+- La collecte automatique complète des cinq plateformes n'est donc pas active à ce stade.
 
 ## Ordre de mise en service
 
