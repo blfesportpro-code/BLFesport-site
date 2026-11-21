@@ -44,7 +44,7 @@ Les API ne donnent pas toutes les mêmes métriques. Le système doit enregistre
 
 Le code du Worker devra utiliser un stockage privé persistant pour les jetons OAuth (KV ou D1). Prévoir les secrets/identifiants d'application par plateforme dans les paramètres privés du Worker :
 - YouTube Data API publique : clé `YOUTUBE_API_KEY` (compteur public d'abonnés). Les rapports privés YouTube Analytics nécessiteront ensuite OAuth propriétaire.
-- Twitch : Client ID, Client Secret, Refresh Token
+- Twitch : `TWITCH_CLIENT_ID`, `TWITCH_CLIENT_SECRET`, `TWITCH_REDIRECT_URI` et un binding KV `TWITCH_TOKEN_STORE`. Le Worker gère l'autorisation via `/oauth/twitch/start` puis `/oauth/twitch/callback` et stocke les jetons tournants dans KV.
 - TikTok : Client Key, Client Secret, Refresh Token
 - Meta / Instagram : App ID, App Secret, jeton utilisateur renouvelable
 - X : identifiants OAuth et jeton autorisé correspondant au type d'accès retenu
@@ -57,11 +57,30 @@ Les noms définitifs des variables seront fixés dans le code avant le paramétr
 - Les champs de calcul des nouveaux abonnés existent.
 - Le Worker relie automatiquement chaque relevé à celui du mois précédent pour la même plateforme, lorsque le relevé précédent existe.
 - Une route manuelle protégée par `SYNC_SECRET` est disponible : `POST /admin/social-links-sync`.
-- Les comptes ne sont pas encore autorisés par les API.
+- Le Worker contient un collecteur Twitch pour le total des followers, avec OAuth et renouvellement des jetons via KV. L'autorisation doit être faite sur le compte propriétaire `blfesport` via `/oauth/twitch/start`.
 - Le Worker contient un premier collecteur YouTube public, exécuté par le Cron et appelable via `POST /admin/social-sync/youtube`.
 - Ce collecteur met à jour le relevé du mois avec le compteur public d'abonnés, si `YOUTUBE_API_KEY` est configurée. Il ne transforme pas les vues ou vidéos cumulées en statistiques mensuelles.
-- Les collecteurs Twitch, TikTok, Instagram et X ne sont pas encore développés. YouTube n'est pas opérationnel tant que la clé API n'est pas configurée et que le déploiement n'a pas été validé.
+- Les collecteurs TikTok, Instagram et X ne sont pas encore développés. YouTube n'est pas opérationnel tant que la clé API n'est pas configurée. Twitch n'est pas opérationnel tant que l'application Twitch, le binding KV et l'autorisation du compte ne sont pas configurés.
 - La collecte automatique complète des cinq plateformes n'est donc pas active à ce stade.
+
+
+## Mise en service Twitch
+
+Le code fournit maintenant :
+- `GET /oauth/twitch/start` : lance l'autorisation Twitch avec le scope minimal `moderator:read:followers`.
+- `GET /oauth/twitch/callback` : vérifie l'état OAuth, échange le code côté serveur, vérifie que le compte autorisé est bien `blfesport`, puis conserve les jetons dans KV.
+- `POST /admin/social-sync/twitch` : synchronisation manuelle protégée par `SYNC_SECRET`.
+- Le Cron exécute aussi le collecteur Twitch toutes les 15 minutes. Les appels répétés mettent à jour le même relevé mensuel.
+
+Configuration à effectuer dans les paramètres privés du Worker Cloudflare :
+1. Créer une application Twitch de type serveur/confidentielle.
+2. Déclarer comme OAuth Redirect URL exacte : `https://blfesport-airtable-api.enzo-reuziault.workers.dev/oauth/twitch/callback`.
+3. Ajouter les variables/secrets `TWITCH_CLIENT_ID`, `TWITCH_CLIENT_SECRET` et `TWITCH_REDIRECT_URI` (cette dernière reprend exactement l'URL ci-dessus).
+4. Créer un namespace KV et le lier au Worker sous le nom exact `TWITCH_TOKEN_STORE`.
+5. Ouvrir `https://blfesport-airtable-api.enzo-reuziault.workers.dev/oauth/twitch/start` dans le navigateur, connecté au compte Twitch propriétaire `blfesport`, puis autoriser l'application.
+6. Le callback confirme la connexion. Le prochain Cron peut alors synchroniser le total de followers.
+
+Ne jamais mettre le Client Secret ou les jetons dans GitHub, Airtable ou une conversation. Le point de terminaison Twitch exige un jeton utilisateur avec `moderator:read:followers` et que l'identité autorisée soit le diffuseur ou un modérateur de la chaîne. Ici le code impose l'identité `blfesport` pour éviter d'enregistrer les statistiques d'un autre compte.
 
 ## Ordre de mise en service
 
