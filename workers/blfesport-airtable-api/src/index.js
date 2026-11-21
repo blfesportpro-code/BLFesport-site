@@ -106,7 +106,16 @@ function normalizeMatch(match, source) {
   const format = ["BO3", "BO5", "BO7"].includes(fmt.toUpperCase()) ? fmt.toUpperCase() : null;
   const outcome = score.a == null || score.b == null || score.a === score.b ? null : score.a > score.b ? "Victoire" : "Défaite";
   const date = parseDate(match.date);
-  const notes = [`Source : ${source === "site" ? "site BLFesport" : "résultats Discord"}`, match.notes || ""].filter(Boolean).join(" — ");
+  const playerNames = (match.players || []).map(player => player.name).filter(Boolean);
+  const gameScores = (match.games || []).map(game => `M${game.game}: ${game.score}${game.overtime ? " (prolongation)" : ""}`).join(" | ");
+  const notes = [
+    "Source : résultats Discord",
+    match.elo ? `Niveau : ${match.elo}` : "",
+    playerNames.length ? `Joueurs : ${playerNames.join(", ")}` : "",
+    gameScores ? `Détail des manches : ${gameScores}` : "",
+    match.replayUrl ? `Replay : ${match.replayUrl}` : "",
+    match.notes || ""
+  ].filter(Boolean).join(" — ");
   const fields = {
     [F.match.name]: `BLFesport vs ${opponent}`,
     [F.match.opponent]: opponent,
@@ -132,31 +141,21 @@ async function fetchSource(url, label) {
 }
 async function syncMatches(env) {
   if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID) throw new Error("Configuration Airtable incomplète");
-  if (!env.SCRIM_RESULTS) throw new Error("Service Binding SCRIM_RESULTS non configuré dans Cloudflare");
-  const [siteResponse, discordResponse] = await Promise.all([
-    fetchSource(SITE_DATA_URL, "Données du site"),
-    env.SCRIM_RESULTS.fetch("https://blfesport-scrim-results/api/matches")
-  ]);
-  if (!discordResponse.ok) throw new Error(`Résultats Discord indisponibles via Service Binding (HTTP ${discordResponse.status})`);
-  const siteSource = await siteResponse.text();
-  const siteMatches = extractArray(siteSource, "matches:");
-  const discordPayload = await discordResponse.json();
-  if (!Array.isArray(discordPayload)) throw new Error("Format inattendu de l'API des résultats Discord");
-  const all = [
-    ...siteMatches.filter(m => !m.example).map(m => normalizeMatch(m, "site")),
-    ...discordPayload.map(m => normalizeMatch(m, "discord"))
-  ];
-  const unique = [...new Map(all.map(item => [item.externalId, item])).values()];
+  // Source unique : la même API Discord que celle utilisée par js/match.js sur le site.
+  const discordResponse = await fetchSource(DISCORD_RESULTS_URL, "Résultats compétitifs Discord");
+  const discordMatches = await discordResponse.json();
+  if (!Array.isArray(discordMatches)) throw new Error("Format inattendu de l'API des résultats Discord");
+  const unique = [...new Map(discordMatches.map(match => {
+    const item = normalizeMatch(match, "discord");
+    return [item.externalId, item];
+  })).values()];
   let createdOrUpdated = 0;
   for (let i = 0; i < unique.length; i += 10) {
     const url = new URL(`https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${TABLES.matches}`);
     url.searchParams.set("returnFieldsByFieldId", "true");
     const response = await fetch(url, {
       method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
-        "content-type": "application/json"
-      },
+      headers: { Authorization: `Bearer ${env.AIRTABLE_TOKEN}`, "content-type": "application/json" },
       body: JSON.stringify({
         performUpsert: { fieldsToMergeOn: [F.match.siteId] },
         records: unique.slice(i, i + 10).map(item => ({ fields: item.fields }))
@@ -166,7 +165,7 @@ async function syncMatches(env) {
     const result = await response.json();
     createdOrUpdated += (result.records || []).length;
   }
-  return { sourceSite: siteMatches.length, sourceDiscord: discordPayload.length, processed: unique.length, createdOrUpdated };
+  return { source: "Discord compétitions", received: discordMatches.length, processed: unique.length, createdOrUpdated };
 }
 async function handle(request, env) {
   const allowedOrigin = env.ALLOWED_ORIGIN || "https://blfesportpro-code.github.io";
