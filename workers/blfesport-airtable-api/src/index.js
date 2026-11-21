@@ -185,17 +185,17 @@ function parisMonthKey(date = new Date()) {
   return year && month ? `${year}-${month}` : null;
 }
 function periodNameToKey(name) {
-  const match = String(name || "").trim().match(/^([A-Za-zÀ-ÿ]+)\\s+(\\d{4})$/);
+  const match = String(name || "").trim().match(/^([A-Za-zÀ-ÿ]+)\s+(\d{4})$/);
   if (!match) return null;
   const months = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
   const index = months.indexOf(match[1].toLocaleLowerCase("fr-FR"));
-  return index < 0 ? null : `${match[2]}-${String(index + 1).padStart(2, "0")}`;
+  return index < 0 ? null : match[2] + "-" + String(index + 1).padStart(2, "0");
 }
 function previousMonthKey(key) {
-  const match = String(key || "").match(/^(\\d{4})-(\\d{2})$/);
+  const match = String(key || "").match(/^(\d{4})-(\d{2})$/);
   if (!match) return null;
   const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 2, 1));
-  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+  return date.getUTCFullYear() + "-" + String(date.getUTCMonth() + 1).padStart(2, "0");
 }
 async function linkPreviousSocialRecords(env) {
   const [periodRows, socialRows] = await Promise.all([
