@@ -1,8 +1,8 @@
 # BLFesport — Worker de supervision
 
-Ce Worker vérifie à la demande l'état des Workers BLFesport configurés.
+Ce Worker vérifie l'état des Workers BLFesport et peut conserver un historique des indisponibilités.
 
-## Ce que fait cette version
+## Vérifications
 
 - Vérifie les Workers rosters, Discord et résultats de scrims en parallèle.
 - Utilise des Cloudflare Service Bindings (pas des URL publiques).
@@ -10,13 +10,10 @@ Ce Worker vérifie à la demande l'état des Workers BLFesport configurés.
 - Signale les erreurs HTTP, les délais dépassés et les Workers injoignables.
 - Lit `updatedAt` et `cacheWarning` lorsqu'ils sont présents dans la réponse JSON.
 - Signale les données de plus de 30 minutes comme potentiellement périmées.
-- N'écrit rien dans KV et n'expose aucun token.
 
-## Déploiement
+## Bindings nécessaires
 
-Créer ou ouvrir le Worker `blfesport-monitor`, puis déployer le contenu de `index.js`.
-
-Dans **Settings → Bindings → Add → Service**, ajouter ces trois Service Bindings :
+Dans **Settings → Bindings**, ajouter les Service Bindings :
 
 | Variable (binding name) | Service Worker |
 |---|---|
@@ -24,23 +21,33 @@ Dans **Settings → Bindings → Add → Service**, ajouter ces trois Service Bi
 | `DISCORD` | `blfesport-discord` |
 | `SCRIM_RESULTS` | `blfesport-scrim-results` |
 
-Sélectionner le service correspondant dans le même compte Cloudflare pour chaque binding, puis sauvegarder et redéployer le Worker.
+Pour activer l'historique, créer un namespace Cloudflare KV nommé par exemple `BLFESPORT_MONITOR_HISTORY`, puis ajouter un binding KV :
 
-Aucune variable URL ni aucun secret URL n'est nécessaire avec cette configuration.
+| Variable name | KV namespace |
+|---|---|
+| `HISTORY` | `BLFESPORT_MONITOR_HISTORY` |
 
-## Routes vérifiées
+Le namespace est séparé des autres données BLFesport. Le Worker n'y écrit que lorsqu'un état change. Les événements sont conservés au maximum 90 jours et limités aux 100 plus récents.
 
-- Rosters : `/`
-- Discord : `/`
-- Résultats de scrims : `/api/matches`
+## Déploiement
 
-## Tester
+Déployer le contenu de `index.js` dans le Worker `blfesport-monitor`, puis sauvegarder les bindings et redéployer.
 
-Ouvrir `https://blfesport-monitor.<sous-domaine>.workers.dev/health`.
+Aucune variable URL ni aucun secret URL n'est nécessaire.
 
-Le JSON renvoie l'état global et le détail de chaque vérification. Un binding absent apparaît comme `not_configured`.
+## Routes
 
-## Limites
+- `/` ou `/health` : vérifie les trois Workers et met à jour l'historique.
+- `/history` : renvoie les incidents enregistrés et les incidents toujours actifs.
 
-- Les vérifications sont effectuées lorsqu'on appelle `/health) ; aucune vérification planifiée n'est lancée.
+## Important : fréquence des vérifications
+
+Les vérifications ont lieu lorsqu'un appel est fait à `/health`. Ce Worker ne lance pas encore de vérifications planifiées tout seul. Pour détecter une panne, il faut donc qu'un service externe appelle régulièrement `/health` (par exemple un Cron Trigger ou un service de monitoring).
+
+L'historique commence à enregistrer les changements d'état après l'activation du binding KV ; il ne peut pas reconstituer les pannes passées.
+
+## Données et limites
+
+- L'historique ne contient que les changements d'état observés lors des appels à `/health`.
 - Les états reflètent la disponibilité HTTP et les métadonnées renvoyées par les Workers, pas une inspection interne de Cloudflare.
+- Le Worker n'expose aucun token.
