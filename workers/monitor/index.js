@@ -6,6 +6,9 @@ const DEFAULT_TARGETS = [
 
 const TIMEOUT_MS = 8000;
 const FRESHNESS_LIMIT_MS = 30 * 60 * 1000;
+const HISTORY_KEY = "monitor:incident-history";
+const HISTORY_LIMIT = 100;
+const HISTORY_TTL_SECONDS = 90 * 24 * 60 * 60;
 
 function corsHeaders() {
   return {
@@ -14,6 +17,85 @@ function corsHeaders() {
     "Access-Control-Allow-Headers": "Content-Type",
     "Cache-Control": "no-store"
   };
+}
+
+function isUnavailable(status) {
+  return status === "offline" || status === "error";
+}
+
+async function readHistory(env) {
+  if (!env.HISTORY || typeof env.HISTORY.get !== "function") return null;
+  try {
+    const stored = await env.HISTORY.get(HISTORY_KEY, "json");
+    return stored && typeof stored === "object"
+      ? { states: stored.states || {}, incidents: Array.isArray(stored.incidents) ? stored.incidents : [] }
+      : { states: {}, incidents: [] };
+  } catch {
+    return { states: {}, incidents: [] };
+  }
+}
+
+async function updateIncidentHistory(env, checks) {
+  const history = await readHistory(env);
+  if (!history || typeof env.HISTORY.put !== "function") {
+    return { enabled: false, recorded: 0 };
+  }
+
+  const now = new Date().toISOString();
+  const nextStates = { ...history.states };
+  const incidents = [...history.incidents];
+  let changed = false;
+  let recorded = 0;
+
+  for (const check of checks) {
+    const previous = history.states[check.id];
+    const current = check.status;
+    if (previous === current) continue;
+
+    changed = true;
+    nextStates[check.id] = current;
+
+    if (!previous) continue;
+
+    if (!isUnavailable(previous) && isUnavailable(current)) {
+      incidents.unshift({
+        id: crypto.randomUUID(),
+        workerId: check.id,
+        workerName: check.name,
+        type: "incident_started",
+        startedAt: now,
+        recoveredAt: null,
+        durationMs: null,
+        status: current
+      });
+      recorded++;
+    } else if (isUnavailable(previous) && !isUnavailable(current)) {
+      const activeIndex = incidents.findIndex(
+        item => item.workerId === check.id && item.type === "incident_started" && !item.recoveredAt
+      );
+      if (activeIndex !== -1) {
+        const incident = incidents[activeIndex];
+        const durationMs = Math.max(0, Date.parse(now) - Date.parse(incident.startedAt));
+        incidents[activeIndex] = {
+          ...incident,
+          recoveredAt: now,
+          durationMs,
+          recoveryStatus: current
+        };
+        recorded++;
+      }
+    }
+  }
+
+  if (changed) {
+    await env.HISTORY.put(HISTORY_KEY, JSON.stringify({
+      updatedAt: now,
+      states: nextStates,
+      incidents: incidents.slice(0, HISTORY_LIMIT)
+    }), { expirationTtl: HISTORY_TTL_SECONDS });
+  }
+
+  return { enabled: true, recorded };
 }
 
 async function checkTarget(target, service) {
@@ -70,11 +152,7 @@ async function checkTarget(target, service) {
       if (data.updatedAt) {
         result.updatedAt = data.updatedAt;
         const ageMs = Date.now() - new Date(data.updatedAt).getTime();
-        if (Number.isFinite(ageMs) && ageMs > FRESHNESS_LIMIT_MS) {
-          result.dataFreshness = "stale";
-        } else {
-          result.dataFreshness = "fresh";
-        }
+        result.dataFreshness = Number.isFinite(ageMs) && ageMs > FRESHNESS_LIMIT_MS ? "stale" : "fresh";
       }
       if (data.cacheWarning) result.warning = String(data.cacheWarning);
       if (data.error) result.remoteError = String(data.error);
@@ -108,11 +186,23 @@ export default {
     }
 
     const url = new URL(request.url);
-    if (request.method !== "GET" || (url.pathname !== "/" && url.pathname !== "/health")) {
+    if (request.method !== "GET" || !["/", "/health", "/history"].includes(url.pathname)) {
       return Response.json(
-        { error: "Route introuvable. Utilise /health." },
+        { error: "Route introuvable. Utilise /health ou /history." },
         { status: 404, headers: corsHeaders() }
       );
+    }
+
+    if (url.pathname === "/history") {
+      const history = await readHistory(env);
+      return Response.json({
+        service: "BLFesport Worker Supervisor",
+        historyEnabled: Boolean(history),
+        retentionDays: 90,
+        limit: HISTORY_LIMIT,
+        incidents: history ? history.incidents : [],
+        activeIncidents: history ? history.incidents.filter(item => !item.recoveredAt) : []
+      }, { headers: { ...corsHeaders(), "Content-Type": "application/json; charset=utf-8" } });
     }
 
     const checks = await Promise.all(
@@ -132,11 +222,18 @@ export default {
         ? "warning"
         : "operational";
 
+    const historyResult = await updateIncidentHistory(env, checks);
+
     return Response.json({
       service: "BLFesport Worker Supervisor",
       status: overall,
       checkedAt: new Date().toISOString(),
       summary: counts,
+      history: {
+        enabled: historyResult.enabled,
+        newEventsRecorded: historyResult.recorded,
+        endpoint: "/history"
+      },
       workers: checks
     }, {
       headers: {
