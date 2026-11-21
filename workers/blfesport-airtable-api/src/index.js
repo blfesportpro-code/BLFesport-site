@@ -223,5 +223,11 @@ async function handle(request, env) {
 }
 export default {
   fetch: handle,
-  scheduled: async (event, env, ctx) => { ctx.waitUntil(syncMatches(env)); }
+  scheduled: async (event, env, ctx) => {
+    ctx.waitUntil(
+      syncMatches(env)
+        .then(result => console.log("BLF_SYNC_OK", JSON.stringify(result)))
+        .catch(error => console.error("BLF_SYNC_ERROR", error?.stack || error?.message || String(error)))
+    );
+  }
 };
