@@ -262,6 +262,16 @@ async function handle(request, env) {
   }});
   if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID) return json({ error: "Airtable non configuré" }, 503, corsOrigin);
   const path = new URL(request.url).pathname;
+  if (request.method === "POST" && path === "/admin/social-links-sync") {
+    if (!env.SYNC_SECRET || request.headers.get("Authorization") !== `Bearer ${env.SYNC_SECRET}`) {
+      return json({ error: "Non autorisé" }, 401, corsOrigin);
+    }
+    try {
+      return json({ status: "ok", sync: await linkPreviousSocialRecords(env) }, 200, corsOrigin);
+    } catch (error) {
+      return json({ error: "Synchronisation des liens sociaux échouée", detail: error.message }, 502, corsOrigin);
+    }
+  }
   if (request.method === "POST" && path === "/admin/sync") {
     if (!env.SYNC_SECRET || request.headers.get("Authorization") !== `Bearer ${env.SYNC_SECRET}`) {
       return json({ error: "Non autorisé" }, 401, corsOrigin);
