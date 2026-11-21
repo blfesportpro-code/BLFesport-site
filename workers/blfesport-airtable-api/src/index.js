@@ -184,8 +184,15 @@ function parisMonthKey(date = new Date()) {
   const month = parts.find(x => x.type === "month")?.value;
   return year && month ? `${year}-${month}` : null;
 }
+function periodNameToKey(name) {
+  const match = String(name || "").trim().match(/^([A-Za-zÀ-ÿ]+)\\s+(\\d{4})$/);
+  if (!match) return null;
+  const months = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+  const index = months.indexOf(match[1].toLocaleLowerCase("fr-FR"));
+  return index < 0 ? null : `${match[2]}-${String(index + 1).padStart(2, "0")}`;
+}
 function previousMonthKey(key) {
-  const match = String(key || "").match(/^(\d{4})-(\d{2})$/);
+  const match = String(key || "").match(/^(\\d{4})-(\\d{2})$/);
   if (!match) return null;
   const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 2, 1));
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
@@ -205,7 +212,7 @@ async function linkPreviousSocialRecords(env) {
     const platform = val(fields, SOCIAL.platform);
     if (!platform) continue;
     for (const periodId of periodIds) {
-      const key = periodKeyById.get(periodId);
+      const key = periodNameToKey(periodKeyById.get(periodId));
       if (key) socialByPeriodPlatform.set(`${key}|${platform}`, row.id);
     }
   }
@@ -216,7 +223,7 @@ async function linkPreviousSocialRecords(env) {
     const platform = val(fields, SOCIAL.platform);
     const periodIds = links(val(fields, SOCIAL.periodLink));
     for (const periodId of periodIds) {
-      const key = periodKeyById.get(periodId);
+      const key = periodNameToKey(periodKeyById.get(periodId));
       const previousKey = previousMonthKey(key);
       const previousId = previousKey && socialByPeriodPlatform.get(`${previousKey}|${platform}`);
       if (previousId && previousId !== row.id) {
@@ -269,9 +276,12 @@ function currentParisPeriod() {
   const year = Number(parts.find(x => x.type === "year")?.value);
   const month = Number(parts.find(x => x.type === "month")?.value);
   const key = `${year}-${String(month).padStart(2, "0")}`;
+  const date = new Date(Date.UTC(year, month - 1, 1));
+  const monthName = new Intl.DateTimeFormat("fr-FR", { month: "long", timeZone: "Europe/Paris" }).format(date);
+  const name = `${monthName.charAt(0).toLocaleUpperCase("fr-FR")}${monthName.slice(1)} ${year}`;
   const start = `${key}-01`;
   const endDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
-  return { key, start, end: `${key}-${String(endDay).padStart(2, "0")}` };
+  return { key, name, start, end: `${key}-${String(endDay).padStart(2, "0")}` };
 }
 async function airtableUpsert(env, tableId, mergeFieldId, records) {
   const url = new URL(`https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${tableId}`);
@@ -302,7 +312,7 @@ async function syncYoutubePublicStats(env) {
   const stats = channel.statistics || {};
   const period = currentParisPeriod();
   const periodRecords = await airtableUpsert(env, SOCIAL.periods, PERIOD_FIELDS.name, [{
-    [PERIOD_FIELDS.name]: period.key,
+    [PERIOD_FIELDS.name]: period.name,
     [PERIOD_FIELDS.start]: period.start,
     [PERIOD_FIELDS.end]: period.end,
     [PERIOD_FIELDS.status]: "En cours"
@@ -310,7 +320,7 @@ async function syncYoutubePublicStats(env) {
   const periodId = periodRecords[0]?.id;
   if (!periodId) throw new Error("Airtable n'a pas retourné l'identifiant de la période");
   const fields = {
-    [SOCIAL_FIELDS.entry]: `YouTube - ${period.key}`,
+    [SOCIAL_FIELDS.entry]: `${period.name} — YouTube`,
     [SOCIAL_FIELDS.period]: [periodId],
     [SOCIAL_FIELDS.platform]: "YouTube",
     [SOCIAL_FIELDS.source]: "API",
@@ -324,7 +334,7 @@ async function syncYoutubePublicStats(env) {
   const linked = await linkPreviousSocialRecords(env);
   return {
     platform: "YouTube", channel: channel.snippet?.title || "BLFesport",
-    period: period.key, subscribersImported: hasSubscribers,
+    period: period.name, subscribersImported: hasSubscribers,
     subscribers: hasSubscribers ? Number(stats.subscriberCount) : null,
     views: "non importées : le point de terminaison public fournit un cumul",
     recordId: socialRecords[0]?.id || null,
