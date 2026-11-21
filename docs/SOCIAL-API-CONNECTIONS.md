@@ -55,6 +55,8 @@ Les noms définitifs des variables seront fixés dans le code avant le paramétr
 
 - Les cinq lignes de réseaux sociaux existent dans Airtable pour novembre 2026.
 - Les champs de calcul des nouveaux abonnés existent.
+- Le Worker relie automatiquement chaque relevé à celui du mois précédent pour la même plateforme, lorsque le relevé précédent existe.
+- Une route manuelle protégée par `SYNC_SECRET` est disponible : `POST /admin/social-links-sync`.
 - Les comptes ne sont pas encore autorisés par les API.
 - Le Worker actuellement présent synchronise les matchs ; il ne synchronise pas encore les cinq plateformes sociales.
 - La collecte automatique n'est donc pas active à ce stade.
