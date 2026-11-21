@@ -6,6 +6,9 @@ compatibility_date = "2026-11-21"
 AIRTABLE_BASE_ID = "appJbBen6zC2vdpj6"
 ALLOWED_ORIGIN = "https://blfesportpro-code.github.io"
 
+[triggers]
+crons = ["*/15 * * * *"]
+
 [[services]]
 binding = "SCRIM_RESULTS"
 service = "blfesport-scrim-results"
