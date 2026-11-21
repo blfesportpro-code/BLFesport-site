@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#100b16">
+  <title>Supervision — BLFesport</title>
+  <link rel="icon" href="assets/favicon.png">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .monitor-wrap{width:min(1120px,calc(100% - 36px));margin:54px auto 90px}
+    .monitor-top{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:28px}
+    .monitor-top h1{font:800 clamp(36px,6vw,58px)/.95 "Barlow Condensed",sans-serif;margin:10px 0}
+    .monitor-top p{color:#aa9bb5;font-size:12px;line-height:1.7;max-width:620px}
+    .monitor-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .monitor-status{display:flex;align-items:center;gap:12px;padding:20px;border:1px solid var(--line);background:linear-gradient(130deg,#21132d,#130f19);margin-bottom:18px}
+    .monitor-dot{width:11px;height:11px;border-radius:50%;background:#777;box-shadow:0 0 14px currentColor;flex:none}
+    .monitor-status strong{display:block;font:700 23px "Barlow Condensed",sans-serif;letter-spacing:.5px}
+    .monitor-status small{display:block;color:#a99caf;font-size:10px;margin-top:4px}
+    .monitor-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+    .monitor-card{border:1px solid var(--line);background:#15101b;padding:20px;min-width:0}
+    .monitor-card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:17px}
+    .monitor-card h2{font:700 21px "Barlow Condensed",sans-serif;margin:0}
+    .monitor-pill{font-size:8px;font-weight:800;letter-spacing:1px;padding:6px 8px;border:1px solid #ffffff22;color:#aaa}
+    .monitor-pill.online{color:#8ee6b0;border-color:#8ee6b055;background:#8ee6b010}
+    .monitor-pill.warning{color:#f0c778;border-color:#f0c77855;background:#f0c77810}
+    .monitor-pill.offline,.monitor-pill.error{color:#ff9292;border-color:#ff929255;background:#ff929210}
+    .monitor-pill.not_configured{color:#b7a8c4}
+    .monitor-metrics{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .monitor-metric small{display:block;color:#92849e;font-size:8px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px}
+    .monitor-metric strong{font:700 19px "Barlow Condensed",sans-serif;color:#eee}
+    .monitor-message{font-size:10px;line-height:1.6;color:#c1a6d2;margin-top:15px;overflow-wrap:anywhere}
+    .monitor-foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:20px;color:#8e8299;font-size:9px}
+    .monitor-error{padding:16px;border:1px solid #ff929255;background:#ff92920c;color:#ffc0c0;font-size:11px;line-height:1.7;margin-top:16px}
+    .monitor-empty{padding:24px;border:1px dashed var(--line);color:#a99caf;font-size:12px;grid-column:1/-1}
+    @media(max-width:800px){.monitor-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:540px){.monitor-grid{grid-template-columns:1fr}.monitor-wrap{margin-top:35px}.monitor-status{align-items:flex-start}}
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html"><img src="assets/logo.png" alt="Logo BLFesport"><span>BLF<span class="accent">esport</span><small>SUPERVISION</small></span></a>
+    <a class="button button-ghost" href="index.html">← Retour au site</a>
+  </header>
+
+  <main class="monitor-wrap">
+    <div class="monitor-top">
+      <div>
+        <p class="eyebrow">CENTRE DE CONTRÔLE · INFRASTRUCTURE</p>
+        <h1>ÉTAT DES <span style="color:var(--purple)">WORKERS</span></h1>
+        <p>Surveillance de la disponibilité des services BLFesport, de leur temps de réponse et des éventuels avertissements remontés par leurs API.</p>
+      </div>
+      <div class="monitor-actions">
+        <button class="button button-primary" id="refreshBtn" type="button">Actualiser</button>
+      </div>
+    </div>
+
+    <section class="monitor-status" aria-live="polite">
+      <span class="monitor-dot" id="globalDot"></span>
+      <div>
+        <strong id="globalStatus">EN ATTENTE</strong>
+        <small id="globalSummary">Lance une vérification pour consulter l'état des services.</small>
+      </div>
+    </section>
+
+    <section class="monitor-grid" id="workerGrid" aria-live="polite">
+      <div class="monitor-empty">En attente de la première vérification…</div>
+    </section>
+
+    <div class="monitor-error" id="monitorError" hidden></div>
+    <div class="monitor-foot">
+      <span id="lastCheck">Dernière vérification : —</span>
+      <span>Actualisation manuelle · Aucune écriture KV</span>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="footer-bottom"><span>© BLFesport</span><span>SUPERVISION TECHNIQUE</span></div></footer>
+
+  <script>
+    // URL du Worker de supervision déployé sur Cloudflare.
+    const MONITOR_ENDPOINT = "https://blfesport-monitor.enzo-reuziault.workers.dev/health";
+    const grid = document.getElementById("workerGrid");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const errorBox = document.getElementById("monitorError");
+    const labels = {
+      online: "OPÉRATIONNEL",
+      warning: "AVERTISSEMENT",
+      offline: "HORS LIGNE",
+      error: "ERREUR",
+      not_configured: "NON CONFIGURÉ"
+    };
+    const safe = value => String(value ?? "").replace(/[&<>"']/g, char => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    })[char]);
+
+    function dateLabel(value) {
+      if (!value) return "Non communiquée";
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? "Inconnue" : date.toLocaleString("fr-FR");
+    }
+
+    function render(data) {
+      const status = data.status || "warning";
+      const statusText = status === "operational" ? "TOUS LES SERVICES OPÉRATIONNELS"
+        : status === "degraded" ? "INCIDENT DÉTECTÉ" : "VÉRIFICATION À CONTRÔLER";
+      const dotColor = status === "operational" ? "#75df9d" : status === "degraded" ? "#ff7777" : "#efc16d";
+      document.getElementById("globalStatus").textContent = statusText;
+      document.getElementById("globalDot").style.background = dotColor;
+      document.getElementById("globalDot").style.color = dotColor;
+
+      const summary = data.summary || {};
+      document.getElementById("globalSummary").textContent =
+        (summary.online || 0) + " opérationnel(s) · " +
+        (summary.warning || 0) + " avertissement(s) · " +
+        (summary.offline || 0) + " erreur(s) · " +
+        (summary.notConfigured || 0) + " non configuré(s)";
+
+      const workers = Array.isArray(data.workers) ? data.workers : [];
+      grid.innerHTML = workers.length ? workers.map(worker => {
+        const state = worker.status || "warning";
+        const latency = Number.isFinite(worker.latencyMs) ? worker.latencyMs + " ms" : "—";
+        const message = worker.message || worker.warning || worker.remoteError || "";
+        return `
+          <article class="monitor-card">
+            <div class="monitor-card-head">
+              <h2>${safe(worker.name || worker.id || "Worker")}</h2>
+              <span class="monitor-pill ${safe(state)}">${safe(labels[state] || state.toUpperCase())}</span>
+            </div>
+            <div class="monitor-metrics">
+              <div class="monitor-metric"><small>Temps de réponse</small><strong>${safe(latency)}</strong></div>
+              <div class="monitor-metric"><small>Code HTTP</small><strong>${safe(worker.httpStatus ?? "—")}</strong></div>
+              <div class="monitor-metric"><small>Données</small><strong>${safe(worker.dataFreshness === "fresh" ? "À jour" : worker.dataFreshness === "stale" ? "Anciennes" : "—")}</strong></div>
+              <div class="monitor-metric"><small>Dernière donnée</small><strong style="font-size:12px">${safe(dateLabel(worker.updatedAt))}</strong></div>
+            </div>
+            ${message ? `<p class="monitor-message">${safe(message)}</p>` : ""}
+          </article>`;
+      }).join("") : '<div class="monitor-empty">Le superviseur n’a retourné aucun Worker.</div>';
+      document.getElementById("lastCheck").textContent = "Dernière vérification : " + dateLabel(data.checkedAt);
+      errorBox.hidden = true;
+    }
+
+    async function check() {
+      refreshBtn.disabled = true;
+      refreshBtn.textContent = "Vérification…";
+      errorBox.hidden = true;
+      try {
+        const response = await fetch(MONITOR_ENDPOINT, { cache: "no-store" });
+        if (!response.ok) throw new Error("Réponse HTTP " + response.status);
+        const data = await response.json();
+        render(data);
+      } catch (error) {
+        document.getElementById("globalStatus").textContent = "SUPERVISEUR INJOIGNABLE";
+        document.getElementById("globalDot").style.background = "#ff7777";
+        document.getElementById("globalSummary").textContent = "Vérifie que le Worker blfesport-monitor est déployé et accessible.";
+        errorBox.textContent = "Impossible de récupérer les états : " + error.message + ". Vérifie aussi l'URL du superviseur et les variables Cloudflare.";
+        errorBox.hidden = false;
+        grid.innerHTML = '<div class="monitor-empty">Aucune donnée disponible pour le moment.</div>';
+      } finally {
+        refreshBtn.disabled = false;
+        refreshBtn.textContent = "Actualiser";
+      }
+    }
+
+    refreshBtn.addEventListener("click", check);
+    check();
+  </script>
+</body>
+</html>
