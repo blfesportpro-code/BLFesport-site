@@ -167,6 +167,89 @@ async function syncMatches(env) {
   }
   return { source: "Discord compétitions", received: discordMatches.length, processed: unique.length, createdOrUpdated };
 }
+
+const SOCIAL = {
+  table: "tblSBSZwyhOqpUOy7",
+  periods: "tblWim9FzbegjIgj9",
+  periodLink: "fld6lEMD8yfmanPRe",
+  platform: "fldCPgNpDnR4pOe5S",
+  previousLink: "fldvnJMvpp86qMieR",
+  periodName: "fldhaW4RtCuaeZtXN"
+};
+function parisMonthKey(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Paris", year: "numeric", month: "2-digit"
+  }).formatToParts(date);
+  const year = parts.find(x => x.type === "year")?.value;
+  const month = parts.find(x => x.type === "month")?.value;
+  return year && month ? `${year}-${month}` : null;
+}
+function previousMonthKey(key) {
+  const match = String(key || "").match(/^(\\d{4})-(\\d{2})$/);
+  if (!match) return null;
+  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 2, 1));
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+async function linkPreviousSocialRecords(env) {
+  const [periodRows, socialRows] = await Promise.all([
+    listRecords(env, SOCIAL.periods),
+    listRecords(env, SOCIAL.table)
+  ]);
+  const periodKeyById = new Map(periodRows.map(row => [
+    row.id, val(row.fields, SOCIAL.periodName)
+  ]));
+  const socialByPeriodPlatform = new Map();
+  for (const row of socialRows) {
+    const fields = row.fields || {};
+    const periodIds = links(val(fields, SOCIAL.periodLink));
+    const platform = val(fields, SOCIAL.platform);
+    if (!platform) continue;
+    for (const periodId of periodIds) {
+      const key = periodKeyById.get(periodId);
+      if (key) socialByPeriodPlatform.set(`${key}|${platform}`, row.id);
+    }
+  }
+  const updates = [];
+  for (const row of socialRows) {
+    const fields = row.fields || {};
+    if (links(val(fields, SOCIAL.previousLink)).length) continue;
+    const platform = val(fields, SOCIAL.platform);
+    const periodIds = links(val(fields, SOCIAL.periodLink));
+    for (const periodId of periodIds) {
+      const key = periodKeyById.get(periodId);
+      const previousKey = previousMonthKey(key);
+      const previousId = previousKey && socialByPeriodPlatform.get(`${previousKey}|${platform}`);
+      if (previousId && previousId !== row.id) {
+        updates.push({ id: row.id, fields: { [SOCIAL.previousLink]: [previousId] } });
+        break;
+      }
+    }
+  }
+  let linked = 0;
+  for (let i = 0; i < updates.length; i += 10) {
+    const response = await fetch(
+      `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${SOCIAL.table}`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({ records: updates.slice(i, i + 10) })
+      }
+    );
+    if (!response.ok) throw new Error(`Lien mensuel Airtable ${response.status}: ${(await response.text()).slice(0, 300)}`);
+    const result = await response.json();
+    linked += (result.records || []).length;
+  }
+  return {
+    checked: socialRows.length,
+    linked,
+    currentMonth: parisMonthKey(),
+    note: linked ? "Liens vers le relevé du mois précédent créés." : "Aucun lien manquant avec un relevé précédent disponible."
+  };
+}
+
 async function handle(request, env) {
   const allowedOrigin = env.ALLOWED_ORIGIN || "https://blfesportpro-code.github.io";
   const origin = request.headers.get("Origin") || "";
@@ -225,9 +308,13 @@ export default {
   fetch: handle,
   scheduled: async (event, env, ctx) => {
     ctx.waitUntil(
-      syncMatches(env)
-        .then(result => console.log("BLF_SYNC_OK", JSON.stringify(result)))
-        .catch(error => console.error("BLF_SYNC_ERROR", error?.stack || error?.message || String(error)))
+      Promise.allSettled([syncMatches(env), linkPreviousSocialRecords(env)])
+        .then(([matches, socialLinks]) => {
+          if (matches.status === "fulfilled") console.log("BLF_SYNC_OK", JSON.stringify(matches.value));
+          else console.error("BLF_SYNC_ERROR", matches.reason?.stack || matches.reason?.message || String(matches.reason));
+          if (socialLinks.status === "fulfilled") console.log("BLF_SOCIAL_LINKS_OK", JSON.stringify(socialLinks.value));
+          else console.error("BLF_SOCIAL_LINKS_ERROR", socialLinks.reason?.stack || socialLinks.reason?.message || String(socialLinks.reason));
+        })
     );
   }
 };
