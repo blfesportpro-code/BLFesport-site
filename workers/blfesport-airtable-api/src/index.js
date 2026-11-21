@@ -185,7 +185,7 @@ function parisMonthKey(date = new Date()) {
   return year && month ? `${year}-${month}` : null;
 }
 function previousMonthKey(key) {
-  const match = String(key || "").match(/^(\\d{4})-(\\d{2})$/);
+  const match = String(key || "").match(/^(\d{4})-(\d{2})$/);
   if (!match) return null;
   const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 2, 1));
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
