@@ -250,6 +250,90 @@ async function linkPreviousSocialRecords(env) {
   };
 }
 
+
+const SOCIAL_FIELDS = {
+  entry: "fldVAc6U6BHj3Gsj2", period: "fld6lEMD8yfmanPRe",
+  platform: "fldCPgNpDnR4pOe5S", followers: "fldJVoRsh5vlSwPqm",
+  posts: "fldvio3JpgLsFvqha", source: "fldZBQ4ubK3Hp8knU",
+  status: "fldFgxFaR2y25tjLf", syncedAt: "fldoodNBxf2YBwkcW",
+  syncDetail: "fld2MPZ9nTMTU3C4Q"
+};
+const PERIOD_FIELDS = {
+  name: "fldhaW4RtCuaeZtXN", start: "fldNsRA3SaSwmNc4m",
+  end: "fldcNGT7WNj2bH512", status: "fldNeYyxbVfKIYmOr"
+};
+function currentParisPeriod() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Paris", year: "numeric", month: "2-digit"
+  }).formatToParts(new Date());
+  const year = Number(parts.find(x => x.type === "year")?.value);
+  const month = Number(parts.find(x => x.type === "month")?.value);
+  const key = `${year}-${String(month).padStart(2, "0")}`;
+  const start = `${key}-01`;
+  const endDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  return { key, start, end: `${key}-${String(endDay).padStart(2, "0")}` };
+}
+async function airtableUpsert(env, tableId, mergeFieldId, records) {
+  const url = new URL(`https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${tableId}`);
+  url.searchParams.set("returnFieldsByFieldId", "true");
+  const response = await fetch(url, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${env.AIRTABLE_TOKEN}`, "content-type": "application/json" },
+    body: JSON.stringify({
+      performUpsert: { fieldsToMergeOn: [mergeFieldId] },
+      records: records.map(fields => ({ fields }))
+    })
+  });
+  if (!response.ok) throw new Error(`Airtable upsert ${response.status}: ${(await response.text()).slice(0, 350)}`);
+  return (await response.json()).records || [];
+}
+async function syncYoutubePublicStats(env) {
+  if (!env.YOUTUBE_API_KEY) return { platform: "YouTube", skipped: true, reason: "YOUTUBE_API_KEY non configurée" };
+  if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID) throw new Error("Configuration Airtable incomplète");
+  const endpoint = new URL("https://www.googleapis.com/youtube/v3/channels");
+  endpoint.searchParams.set("part", "snippet,statistics");
+  endpoint.searchParams.set("forHandle", "@BLFesport");
+  endpoint.searchParams.set("key", env.YOUTUBE_API_KEY);
+  const response = await fetch(endpoint);
+  if (!response.ok) throw new Error(`YouTube Data API ${response.status}: ${(await response.text()).slice(0, 300)}`);
+  const payload = await response.json();
+  const channel = payload.items?.[0];
+  if (!channel) throw new Error("Chaîne YouTube @BLFesport introuvable via l'API officielle");
+  const stats = channel.statistics || {};
+  const period = currentParisPeriod();
+  const periodRecords = await airtableUpsert(env, SOCIAL.periods, PERIOD_FIELDS.name, [{
+    [PERIOD_FIELDS.name]: period.key,
+    [PERIOD_FIELDS.start]: period.start,
+    [PERIOD_FIELDS.end]: period.end,
+    [PERIOD_FIELDS.status]: "En cours"
+  }]);
+  const periodId = periodRecords[0]?.id;
+  if (!periodId) throw new Error("Airtable n'a pas retourné l'identifiant de la période");
+  const fields = {
+    [SOCIAL_FIELDS.entry]: `YouTube - ${period.key}`,
+    [SOCIAL_FIELDS.period]: [periodId],
+    [SOCIAL_FIELDS.platform]: "YouTube",
+    [SOCIAL_FIELDS.posts]: Number(stats.videoCount || 0),
+    [SOCIAL_FIELDS.source]: "API",
+    [SOCIAL_FIELDS.status]: "Synchronisée",
+    [SOCIAL_FIELDS.syncedAt]: new Date().toISOString(),
+    [SOCIAL_FIELDS.syncDetail]: "Import via YouTube Data API. Publications = nombre de vidéos publiques cumulées. Les vues cumulées ne sont pas enregistrées comme vues mensuelles."
+  };
+  const hasSubscribers = stats.hiddenSubscriberCount !== true && stats.subscriberCount != null;
+  if (hasSubscribers) fields[SOCIAL_FIELDS.followers] = Number(stats.subscriberCount);
+  const socialRecords = await airtableUpsert(env, SOCIAL.table, SOCIAL_FIELDS.entry, [fields]);
+  const linked = await linkPreviousSocialRecords(env);
+  return {
+    platform: "YouTube", channel: channel.snippet?.title || "BLFesport",
+    period: period.key, subscribersImported: hasSubscribers,
+    subscribers: hasSubscribers ? Number(stats.subscriberCount) : null,
+    publicVideos: Number(stats.videoCount || 0),
+    views: "non importées : le point de terminaison public fournit un cumul",
+    recordId: socialRecords[0]?.id || null,
+    previousMonthLinksCreated: linked.linked
+  };
+}
+
 async function handle(request, env) {
   const allowedOrigin = env.ALLOWED_ORIGIN || "https://blfesportpro-code.github.io";
   const origin = request.headers.get("Origin") || "";
@@ -262,6 +346,16 @@ async function handle(request, env) {
   }});
   if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID) return json({ error: "Airtable non configuré" }, 503, corsOrigin);
   const path = new URL(request.url).pathname;
+  if (request.method === "POST" && path === "/admin/social-sync/youtube") {
+    if (!env.SYNC_SECRET || request.headers.get("Authorization") !== `Bearer ${env.SYNC_SECRET}`) {
+      return json({ error: "Non autorisé" }, 401, corsOrigin);
+    }
+    try {
+      return json({ status: "ok", sync: await syncYoutubePublicStats(env) }, 200, corsOrigin);
+    } catch (error) {
+      return json({ error: "Synchronisation YouTube échouée", detail: error.message }, 502, corsOrigin);
+    }
+  }
   if (request.method === "POST" && path === "/admin/social-links-sync") {
     if (!env.SYNC_SECRET || request.headers.get("Authorization") !== `Bearer ${env.SYNC_SECRET}`) {
       return json({ error: "Non autorisé" }, 401, corsOrigin);
@@ -318,12 +412,14 @@ export default {
   fetch: handle,
   scheduled: async (event, env, ctx) => {
     ctx.waitUntil(
-      Promise.allSettled([syncMatches(env), linkPreviousSocialRecords(env)])
-        .then(([matches, socialLinks]) => {
+      Promise.allSettled([syncMatches(env), linkPreviousSocialRecords(env), syncYoutubePublicStats(env)])
+        .then(([matches, socialLinks, youtube]) => {
           if (matches.status === "fulfilled") console.log("BLF_SYNC_OK", JSON.stringify(matches.value));
           else console.error("BLF_SYNC_ERROR", matches.reason?.stack || matches.reason?.message || String(matches.reason));
           if (socialLinks.status === "fulfilled") console.log("BLF_SOCIAL_LINKS_OK", JSON.stringify(socialLinks.value));
           else console.error("BLF_SOCIAL_LINKS_ERROR", socialLinks.reason?.stack || socialLinks.reason?.message || String(socialLinks.reason));
+          if (youtube.status === "fulfilled") console.log("BLF_YOUTUBE_SYNC", JSON.stringify(youtube.value));
+          else console.error("BLF_YOUTUBE_SYNC_ERROR", youtube.reason?.stack || youtube.reason?.message || String(youtube.reason));
         })
     );
   }
