@@ -119,15 +119,15 @@ function normalizeMatch(match, source) {
   const fields = {
     [F.match.name]: `BLFesport vs ${opponent}`,
     [F.match.opponent]: opponent,
-    [F.match.roster]: { name: roster },
-    [F.match.competition]: { name: competition },
-    [F.match.sync]: { name: "Synchronisé" },
+    [F.match.roster]: roster,
+    [F.match.competition]: competition,
+    [F.match.sync]: "Synchronisé",
     [F.match.siteId]: externalId,
     [F.match.notes]: notes
   };
   if (date) fields[F.match.date] = date;
-  if (format) fields[F.match.format] = { name: format };
-  if (outcome) fields[F.match.result] = { name: outcome };
+  if (format) fields[F.match.format] = format;
+  if (outcome) fields[F.match.result] = outcome;
   if (score.a != null && score.b != null) {
     fields[F.match.blfScore] = score.a;
     fields[F.match.opponentScore] = score.b;
