@@ -132,10 +132,12 @@ async function fetchSource(url, label) {
 }
 async function syncMatches(env) {
   if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID) throw new Error("Configuration Airtable incomplète");
+  if (!env.SCRIM_RESULTS) throw new Error("Service Binding SCRIM_RESULTS non configuré dans Cloudflare");
   const [siteResponse, discordResponse] = await Promise.all([
     fetchSource(SITE_DATA_URL, "Données du site"),
-    fetchSource(DISCORD_RESULTS_URL, "Résultats Discord")
+    env.SCRIM_RESULTS.fetch("https://blfesport-scrim-results/api/matches")
   ]);
+  if (!discordResponse.ok) throw new Error(`Résultats Discord indisponibles via Service Binding (HTTP ${discordResponse.status})`);
   const siteSource = await siteResponse.text();
   const siteMatches = extractArray(siteSource, "matches:");
   const discordPayload = await discordResponse.json();
