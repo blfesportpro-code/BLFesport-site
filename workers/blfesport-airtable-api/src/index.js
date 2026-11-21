@@ -254,7 +254,7 @@ async function linkPreviousSocialRecords(env) {
 const SOCIAL_FIELDS = {
   entry: "fldVAc6U6BHj3Gsj2", period: "fld6lEMD8yfmanPRe",
   platform: "fldCPgNpDnR4pOe5S", followers: "fldJVoRsh5vlSwPqm",
-  posts: "fldvio3JpgLsFvqha", source: "fldZBQ4ubK3Hp8knU",
+  source: "fldZBQ4ubK3Hp8knU",
   status: "fldFgxFaR2y25tjLf", syncedAt: "fldoodNBxf2YBwkcW",
   syncDetail: "fld2MPZ9nTMTU3C4Q"
 };
@@ -313,11 +313,10 @@ async function syncYoutubePublicStats(env) {
     [SOCIAL_FIELDS.entry]: `YouTube - ${period.key}`,
     [SOCIAL_FIELDS.period]: [periodId],
     [SOCIAL_FIELDS.platform]: "YouTube",
-    [SOCIAL_FIELDS.posts]: Number(stats.videoCount || 0),
     [SOCIAL_FIELDS.source]: "API",
     [SOCIAL_FIELDS.status]: "Synchronisée",
     [SOCIAL_FIELDS.syncedAt]: new Date().toISOString(),
-    [SOCIAL_FIELDS.syncDetail]: "Import via YouTube Data API. Publications = nombre de vidéos publiques cumulées. Les vues cumulées ne sont pas enregistrées comme vues mensuelles."
+    [SOCIAL_FIELDS.syncDetail]: "Import via YouTube Data API : abonnés publics uniquement. Les compteurs cumulés de vues et de vidéos ne sont pas présentés comme des statistiques mensuelles."
   };
   const hasSubscribers = stats.hiddenSubscriberCount !== true && stats.subscriberCount != null;
   if (hasSubscribers) fields[SOCIAL_FIELDS.followers] = Number(stats.subscriberCount);
@@ -327,7 +326,6 @@ async function syncYoutubePublicStats(env) {
     platform: "YouTube", channel: channel.snippet?.title || "BLFesport",
     period: period.key, subscribersImported: hasSubscribers,
     subscribers: hasSubscribers ? Number(stats.subscriberCount) : null,
-    publicVideos: Number(stats.videoCount || 0),
     views: "non importées : le point de terminaison public fournit un cumul",
     recordId: socialRecords[0]?.id || null,
     previousMonthLinksCreated: linked.linked
