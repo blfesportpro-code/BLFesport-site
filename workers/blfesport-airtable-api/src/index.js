@@ -342,6 +342,74 @@ async function syncYoutubePublicStats(env) {
   };
 }
 
+async function getTwitchUserToken(env) {
+  if (!env.TWITCH_TOKEN_STORE) return { skipped: true, reason: 'Binding KV TWITCH_TOKEN_STORE non configuré' };
+  if (!env.TWITCH_CLIENT_ID || !env.TWITCH_CLIENT_SECRET) return { skipped: true, reason: 'Identifiants application Twitch manquants' };
+  let refreshToken = await env.TWITCH_TOKEN_STORE.get('refresh_token');
+  if (!refreshToken) refreshToken = env.TWITCH_REFRESH_TOKEN || null;
+  if (!refreshToken) return { skipped: true, reason: 'Refresh token Twitch non configuré' };
+  const cached = await env.TWITCH_TOKEN_STORE.get('access_token');
+  if (cached) {
+    const check = await fetch('https://id.twitch.tv/oauth2/validate', { headers: { Authorization: 'OAuth ' + cached } });
+    if (check.ok) {
+      const info = await check.json();
+      if (info.client_id === env.TWITCH_CLIENT_ID && (info.scopes || []).includes('moderator:read:followers')) return { accessToken: cached };
+    }
+  }
+  const form = new URLSearchParams({ grant_type: 'refresh_token', refresh_token: refreshToken, client_id: env.TWITCH_CLIENT_ID, client_secret: env.TWITCH_CLIENT_SECRET });
+  const response = await fetch('https://id.twitch.tv/oauth2/token', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: form });
+  if (!response.ok) throw new Error('Renouvellement OAuth Twitch ' + response.status + ': ' + (await response.text()).slice(0, 250));
+  const token = await response.json();
+  if (!(token.scope || []).includes('moderator:read:followers')) throw new Error('Le jeton Twitch ne possède pas le scope moderator:read:followers');
+  if (!token.access_token || !token.refresh_token) throw new Error('Réponse OAuth Twitch incomplète');
+  await Promise.all([
+    env.TWITCH_TOKEN_STORE.put('access_token', token.access_token, { expirationTtl: Math.max(60, Number(token.expires_in || 14400) - 120) }),
+    env.TWITCH_TOKEN_STORE.put('refresh_token', token.refresh_token)
+  ]);
+  return { accessToken: token.access_token };
+}
+async function syncTwitchStats(env) {
+  if (!env.TWITCH_TOKEN_STORE || !env.TWITCH_CLIENT_ID || !env.TWITCH_CLIENT_SECRET) return { platform: 'Twitch', skipped: true, reason: 'Configuration OAuth/KV Twitch incomplète' };
+  if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID) throw new Error('Configuration Airtable incomplète');
+  const auth = await getTwitchUserToken(env);
+  if (auth.skipped) return { platform: 'Twitch', skipped: true, reason: auth.reason };
+  const headers = { Authorization: 'Bearer ' + auth.accessToken, 'Client-Id': env.TWITCH_CLIENT_ID };
+  const userUrl = new URL('https://api.twitch.tv/helix/users');
+  userUrl.searchParams.set('login', 'blfesport');
+  const userResponse = await fetch(userUrl, { headers });
+  if (!userResponse.ok) throw new Error('Twitch Get Users ' + userResponse.status + ': ' + (await userResponse.text()).slice(0, 250));
+  const user = (await userResponse.json()).data?.[0];
+  if (!user?.id) throw new Error('Compte Twitch blfesport introuvable');
+  const followersUrl = new URL('https://api.twitch.tv/helix/channels/followers');
+  followersUrl.searchParams.set('broadcaster_id', user.id);
+  followersUrl.searchParams.set('first', '1');
+  let response = await fetch(followersUrl, { headers });
+  if (response.status === 401) {
+    await env.TWITCH_TOKEN_STORE.delete('access_token');
+    const refreshed = await getTwitchUserToken(env);
+    if (refreshed.skipped) throw new Error(refreshed.reason);
+    headers.Authorization = 'Bearer ' + refreshed.accessToken;
+    response = await fetch(followersUrl, { headers });
+  }
+  if (!response.ok) throw new Error('Twitch Get Channel Followers ' + response.status + ': ' + (await response.text()).slice(0, 250));
+  const result = await response.json();
+  if (!Number.isFinite(Number(result.total))) throw new Error('Twitch n’a pas renvoyé le total des followers');
+  const period = currentParisPeriod();
+  const periods = await airtableUpsert(env, SOCIAL.periods, PERIOD_FIELDS.name, [{
+    [PERIOD_FIELDS.name]: period.name, [PERIOD_FIELDS.start]: period.start, [PERIOD_FIELDS.end]: period.end, [PERIOD_FIELDS.status]: 'En cours'
+  }]);
+  if (!periods[0]?.id) throw new Error('Identifiant de période Airtable absent');
+  const fields = {
+    [SOCIAL_FIELDS.entry]: period.name + ' — Twitch', [SOCIAL_FIELDS.period]: [periods[0].id],
+    [SOCIAL_FIELDS.platform]: 'Twitch', [SOCIAL_FIELDS.followers]: Number(result.total),
+    [SOCIAL_FIELDS.source]: 'API', [SOCIAL_FIELDS.status]: 'Synchronisée', [SOCIAL_FIELDS.syncedAt]: new Date().toISOString(),
+    [SOCIAL_FIELDS.syncDetail]: 'Total des followers récupéré via Twitch Helix Get Channel Followers.'
+  };
+  const records = await airtableUpsert(env, SOCIAL.table, SOCIAL_FIELDS.entry, [fields]);
+  const linksResult = await linkPreviousSocialRecords(env);
+  return { platform: 'Twitch', channel: user.display_name || user.login, period: period.name, followers: Number(result.total), recordId: records[0]?.id || null, previousMonthLinksCreated: linksResult.linked };
+}
+
 async function handle(request, env) {
   const allowedOrigin = env.ALLOWED_ORIGIN || "https://blfesportpro-code.github.io";
   const origin = request.headers.get("Origin") || "";
@@ -354,6 +422,11 @@ async function handle(request, env) {
   }});
   if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID) return json({ error: "Airtable non configuré" }, 503, corsOrigin);
   const path = new URL(request.url).pathname;
+  if (request.method === "POST" && path === "/admin/social-sync/twitch") {
+    if (!env.SYNC_SECRET || request.headers.get("Authorization") !== `Bearer ${env.SYNC_SECRET}`) return json({ error: "Non autorisé" }, 401, corsOrigin);
+    try { return json({ status: "ok", sync: await syncTwitchStats(env) }, 200, corsOrigin); }
+    catch (error) { return json({ error: "Synchronisation Twitch échouée", detail: error.message }, 502, corsOrigin); }
+  }
   if (request.method === "POST" && path === "/admin/social-sync/youtube") {
     if (!env.SYNC_SECRET || request.headers.get("Authorization") !== `Bearer ${env.SYNC_SECRET}`) {
       return json({ error: "Non autorisé" }, 401, corsOrigin);
@@ -420,14 +493,16 @@ export default {
   fetch: handle,
   scheduled: async (event, env, ctx) => {
     ctx.waitUntil(
-      Promise.allSettled([syncMatches(env), linkPreviousSocialRecords(env), syncYoutubePublicStats(env)])
-        .then(([matches, socialLinks, youtube]) => {
+      Promise.allSettled([syncMatches(env), linkPreviousSocialRecords(env), syncYoutubePublicStats(env), syncTwitchStats(env)])
+        .then(([matches, socialLinks, youtube, twitch]) => {
           if (matches.status === "fulfilled") console.log("BLF_SYNC_OK", JSON.stringify(matches.value));
           else console.error("BLF_SYNC_ERROR", matches.reason?.stack || matches.reason?.message || String(matches.reason));
           if (socialLinks.status === "fulfilled") console.log("BLF_SOCIAL_LINKS_OK", JSON.stringify(socialLinks.value));
           else console.error("BLF_SOCIAL_LINKS_ERROR", socialLinks.reason?.stack || socialLinks.reason?.message || String(socialLinks.reason));
           if (youtube.status === "fulfilled") console.log("BLF_YOUTUBE_SYNC", JSON.stringify(youtube.value));
           else console.error("BLF_YOUTUBE_SYNC_ERROR", youtube.reason?.stack || youtube.reason?.message || String(youtube.reason));
+          if (twitch.status === "fulfilled") console.log("BLF_TWITCH_SYNC", JSON.stringify(twitch.value));
+          else console.error("BLF_TWITCH_SYNC_ERROR", twitch.reason?.stack || twitch.reason?.message || String(twitch.reason));
         })
     );
   }
