@@ -1,6 +1,7 @@
 const DEFAULT_TARGETS = [
   { id: "rosters", name: "Worker des rosters", envKey: "ROSTERS_URL" },
-  { id: "discord", name: "Worker Discord", envKey: "DISCORD_URL" }
+  { id: "discord", name: "Worker Discord", envKey: "DISCORD_URL" },
+  { id: "scrim-results", name: "Worker des résultats de scrims", envKey: "SCRIM_RESULTS_URL" }
 ];
 
 const TIMEOUT_MS = 8000;
