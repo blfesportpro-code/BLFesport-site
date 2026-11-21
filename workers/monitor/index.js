@@ -1,7 +1,7 @@
 const DEFAULT_TARGETS = [
-  { id: "rosters", name: "Worker des rosters", envKey: "ROSTERS_URL" },
-  { id: "discord", name: "Worker Discord", envKey: "DISCORD_URL" },
-  { id: "scrim-results", name: "Worker des résultats de scrims", envKey: "SCRIM_RESULTS_URL" }
+  { id: "rosters", name: "Worker des rosters", binding: "ROSTERS", path: "/" },
+  { id: "discord", name: "Worker Discord", binding: "DISCORD", path: "/" },
+  { id: "scrim-results", name: "Worker des résultats de scrims", binding: "SCRIM_RESULTS", path: "/api/matches" }
 ];
 
 const TIMEOUT_MS = 8000;
@@ -16,13 +16,13 @@ function corsHeaders() {
   };
 }
 
-async function checkTarget(target, url) {
-  if (!url) {
+async function checkTarget(target, service) {
+  if (!service || typeof service.fetch !== "function") {
     return {
       id: target.id,
       name: target.name,
       status: "not_configured",
-      message: "URL non configurée"
+      message: `Service Binding ${target.binding} non configuré`
     };
   }
 
@@ -31,12 +31,12 @@ async function checkTarget(target, url) {
   const startedAt = Date.now();
 
   try {
-    const response = await fetch(url, {
+    const request = new Request(`https://blfesport.internal${target.path}`, {
       method: "GET",
       headers: { "Accept": "application/json" },
-      signal: controller.signal,
-      cf: { cacheTtl: 0, cacheEverything: false }
+      signal: controller.signal
     });
+    const response = await service.fetch(request);
 
     const latencyMs = Date.now() - startedAt;
     const contentType = response.headers.get("content-type") || "";
@@ -51,14 +51,13 @@ async function checkTarget(target, url) {
       }
     }
 
-    const checkedUrl = new URL(url);
     const result = {
       id: target.id,
       name: target.name,
+      binding: target.binding,
+      path: target.path,
       status: response.ok ? "online" : "error",
       httpStatus: response.status,
-      checkedUrl: checkedUrl.origin + checkedUrl.pathname,
-      responseUrl: response.url,
       latencyMs,
       checkedAt: new Date().toISOString()
     };
@@ -117,7 +116,7 @@ export default {
     }
 
     const checks = await Promise.all(
-      DEFAULT_TARGETS.map(target => checkTarget(target, env[target.envKey]))
+      DEFAULT_TARGETS.map(target => checkTarget(target, env[target.binding]))
     );
 
     const counts = {
