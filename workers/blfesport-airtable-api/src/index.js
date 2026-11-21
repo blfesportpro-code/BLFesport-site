@@ -15,7 +15,7 @@ const F = {
     format: "fldCHxTm8Z7wmBTpN", result: "fldA37wxrPd2eCUKu",
     blfScore: "fldOKoI21qqF5qcZy", opponentScore: "fldol80htLVjG1nde",
     notes: "fldvu82m8ZpHaTmuf", roster: "fldSpaHdZ51r19jJf",
-    siteId: "fldBoNUaxwsuNqosq", sync: "fldDZy8fwMT9sCaBe"
+    siteId: "fldBoNUaxwsuNqosq", sync: "fldDZy8fwMT9sCaBe", playerStats: "fldmMcYeVSEYtIQfw"
   }
 };
 const SITE_DATA_URL = "https://raw.githubusercontent.com/blfesportpro-code/BLFesport-site/main/js/data.js";
