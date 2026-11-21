@@ -422,6 +422,49 @@ async function handle(request, env) {
   }});
   if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID) return json({ error: "Airtable non configuré" }, 503, corsOrigin);
   const path = new URL(request.url).pathname;
+  if (request.method === "GET" && path === "/oauth/twitch/start") {
+    if (!env.TWITCH_TOKEN_STORE || !env.TWITCH_CLIENT_ID || !env.TWITCH_REDIRECT_URI) return json({ error: "Configuration OAuth Twitch/KV incomplète" }, 503, corsOrigin);
+    const state = crypto.randomUUID();
+    await env.TWITCH_TOKEN_STORE.put("oauth_state:" + state, "pending", { expirationTtl: 600 });
+    const authorize = new URL("https://id.twitch.tv/oauth2/authorize");
+    authorize.searchParams.set("response_type", "code");
+    authorize.searchParams.set("client_id", env.TWITCH_CLIENT_ID);
+    authorize.searchParams.set("redirect_uri", env.TWITCH_REDIRECT_URI);
+    authorize.searchParams.set("scope", "moderator:read:followers");
+    authorize.searchParams.set("state", state);
+    authorize.searchParams.set("force_verify", "true");
+    return Response.redirect(authorize.toString(), 302);
+  }
+  if (request.method === "GET" && path === "/oauth/twitch/callback") {
+    if (!env.TWITCH_TOKEN_STORE || !env.TWITCH_CLIENT_ID || !env.TWITCH_CLIENT_SECRET || !env.TWITCH_REDIRECT_URI) return json({ error: "Configuration OAuth Twitch/KV incomplète" }, 503, corsOrigin);
+    const query = new URL(request.url).searchParams;
+    const state = query.get("state");
+    if (!state || await env.TWITCH_TOKEN_STORE.get("oauth_state:" + state) !== "pending") return json({ error: "État OAuth invalide ou expiré" }, 400, corsOrigin);
+    await env.TWITCH_TOKEN_STORE.delete("oauth_state:" + state);
+    if (query.get("error")) return json({ error: "Autorisation Twitch refusée", detail: query.get("error_description") || query.get("error") }, 400, corsOrigin);
+    const code = query.get("code");
+    if (!code) return json({ error: "Code OAuth manquant" }, 400, corsOrigin);
+    const form = new URLSearchParams({ client_id: env.TWITCH_CLIENT_ID, client_secret: env.TWITCH_CLIENT_SECRET, code, grant_type: "authorization_code", redirect_uri: env.TWITCH_REDIRECT_URI });
+    const tokenResponse = await fetch("https://id.twitch.tv/oauth2/token", { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: form });
+    if (!tokenResponse.ok) return json({ error: "Échange OAuth Twitch impossible", detail: (await tokenResponse.text()).slice(0, 250) }, 502, corsOrigin);
+    const token = await tokenResponse.json();
+    if (!(token.scope || []).includes("moderator:read:followers") || !token.access_token || !token.refresh_token) return json({ error: "Twitch n’a pas accordé le scope requis" }, 400, corsOrigin);
+    const validation = await fetch("https://id.twitch.tv/oauth2/validate", { headers: { Authorization: "OAuth " + token.access_token } });
+    if (!validation.ok) return json({ error: "Validation du jeton Twitch impossible" }, 502, corsOrigin);
+    const identity = await validation.json();
+    const userResponse = await fetch("https://api.twitch.tv/helix/users", { headers: { Authorization: "Bearer " + token.access_token, "Client-Id": env.TWITCH_CLIENT_ID } });
+    if (!userResponse.ok) return json({ error: "Lecture du compte Twitch autorisé impossible" }, 502, corsOrigin);
+    const user = (await userResponse.json()).data?.[0];
+    if (!user || user.login?.toLowerCase() !== "blfesport") return json({ error: "Connecte-toi au compte Twitch BLFesport (@blfesport), puis recommence." }, 403, corsOrigin);
+    await Promise.all([
+      env.TWITCH_TOKEN_STORE.put("access_token", token.access_token, { expirationTtl: Math.max(60, Number(token.expires_in || 14400) - 120) }),
+      env.TWITCH_TOKEN_STORE.put("refresh_token", token.refresh_token),
+      env.TWITCH_TOKEN_STORE.put("broadcaster_id", user.id),
+      env.TWITCH_TOKEN_STORE.put("authorized_login", user.login),
+      env.TWITCH_TOKEN_STORE.put("authorized_user_id", identity.user_id || user.id)
+    ]);
+    return new Response("Connexion Twitch BLFesport réussie. Tu peux fermer cette page. Le Worker synchronisera les followers lors du prochain passage automatique.", { headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" } });
+  }
   if (request.method === "POST" && path === "/admin/social-sync/twitch") {
     if (!env.SYNC_SECRET || request.headers.get("Authorization") !== `Bearer ${env.SYNC_SECRET}`) return json({ error: "Non autorisé" }, 401, corsOrigin);
     try { return json({ status: "ok", sync: await syncTwitchStats(env) }, 200, corsOrigin); }
