@@ -913,7 +913,9 @@ export class DiscordGateway extends DurableObject {
     if (!period) throw new Error("Période Airtable introuvable : " + periodLabel);
 
     const discordRows = await listRecords(env, DISCORD_STATS.table);
+    const expectedEntry = periodLabel + " — Discord";
     const periodRowsForDiscord = discordRows.filter(row =>
+      val(row.fields, DISCORD_STATS.entry) === expectedEntry ||
       links(val(row.fields, DISCORD_STATS.periodLink)).some(link => link.id === period.id)
     );
     // En cas de doublon historique, conserver en priorité la ligne qui contient
