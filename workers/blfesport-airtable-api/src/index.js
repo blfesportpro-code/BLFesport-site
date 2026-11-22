@@ -475,40 +475,111 @@ async function syncTwitchStats(env) {
   const auth = await getTwitchUserToken(env);
   if (auth.skipped) return { platform: 'Twitch', skipped: true, reason: auth.reason };
   const headers = { Authorization: 'Bearer ' + auth.accessToken, 'Client-Id': env.TWITCH_CLIENT_ID };
+  async function twitchFetch(url) {
+    let result = await fetch(url, { headers });
+    if (result.status === 401) {
+      await env.TWITCH_TOKEN_STORE.delete('access_token');
+      const refreshed = await getTwitchUserToken(env);
+      if (refreshed.skipped) throw new Error(refreshed.reason);
+      headers.Authorization = 'Bearer ' + refreshed.accessToken;
+      result = await fetch(url, { headers });
+    }
+    return result;
+  }
   const userUrl = new URL('https://api.twitch.tv/helix/users');
   userUrl.searchParams.set('login', 'blfesport');
-  const userResponse = await fetch(userUrl, { headers });
+  const userResponse = await twitchFetch(userUrl);
   if (!userResponse.ok) throw new Error('Twitch Get Users ' + userResponse.status + ': ' + (await userResponse.text()).slice(0, 250));
   const user = (await userResponse.json()).data?.[0];
   if (!user?.id) throw new Error('Compte Twitch blfesport introuvable');
+
   const followersUrl = new URL('https://api.twitch.tv/helix/channels/followers');
   followersUrl.searchParams.set('broadcaster_id', user.id);
   followersUrl.searchParams.set('first', '1');
-  let response = await fetch(followersUrl, { headers });
-  if (response.status === 401) {
-    await env.TWITCH_TOKEN_STORE.delete('access_token');
-    const refreshed = await getTwitchUserToken(env);
-    if (refreshed.skipped) throw new Error(refreshed.reason);
-    headers.Authorization = 'Bearer ' + refreshed.accessToken;
-    response = await fetch(followersUrl, { headers });
-  }
-  if (!response.ok) throw new Error('Twitch Get Channel Followers ' + response.status + ': ' + (await response.text()).slice(0, 250));
-  const result = await response.json();
-  if (!Number.isFinite(Number(result.total))) throw new Error('Twitch n’a pas renvoyé le total des followers');
+  const followersResponse = await twitchFetch(followersUrl);
+  if (!followersResponse.ok) throw new Error('Twitch Get Channel Followers ' + followersResponse.status + ': ' + (await followersResponse.text()).slice(0, 250));
+  const followersResult = await followersResponse.json();
+  const followers = Number(followersResult.total);
+  if (!Number.isFinite(followers)) throw new Error('Twitch n’a pas renvoyé le total des followers');
+
   const period = currentParisPeriod();
+  const previousFollowersKey = 'last_followers_total';
+  const monthlyFollowersKey = 'monthly_new_followers:' + period.key;
+  const previousFollowersRaw = await env.TWITCH_TOKEN_STORE.get(previousFollowersKey);
+  const previousFollowers = previousFollowersRaw == null ? null : Number(previousFollowersRaw);
+  const monthlyStored = Number(await env.TWITCH_TOKEN_STORE.get(monthlyFollowersKey) || 0);
+  const gainedSinceLastSync = previousFollowers == null ? 0 : Math.max(0, followers - previousFollowers);
+  const monthlyNewFollowers = monthlyStored + gainedSinceLastSync;
+
+  // Vues cumulées des VODs et clips publiés pendant le mois en cours.
+  // Elles ne représentent pas les vues obtenues uniquement pendant ce mois.
+  const videos = [];
+  let videoCursor = null;
+  for (let page = 0; page < 5; page++) {
+    const videosUrl = new URL('https://api.twitch.tv/helix/videos');
+    videosUrl.searchParams.set('user_id', user.id);
+    videosUrl.searchParams.set('first', '100');
+    if (videoCursor) videosUrl.searchParams.set('after', videoCursor);
+    const videoResponse = await twitchFetch(videosUrl);
+    if (!videoResponse.ok) throw new Error('Twitch Get Videos ' + videoResponse.status + ': ' + (await videoResponse.text()).slice(0, 250));
+    const payload = await videoResponse.json();
+    videos.push(...(payload.data || []));
+    videoCursor = payload.pagination?.cursor || null;
+    if (!videoCursor) break;
+  }
+  const clips = [];
+  let clipCursor = null;
+  const clipsUrlBase = new URL('https://api.twitch.tv/helix/clips');
+  clipsUrlBase.searchParams.set('broadcaster_id', user.id);
+  clipsUrlBase.searchParams.set('started_at', period.start + 'T00:00:00Z');
+  clipsUrlBase.searchParams.set('ended_at', new Date().toISOString());
+  clipsUrlBase.searchParams.set('first', '100');
+  for (let page = 0; page < 5; page++) {
+    const clipsUrl = new URL(clipsUrlBase);
+    if (clipCursor) clipsUrl.searchParams.set('after', clipCursor);
+    const clipResponse = await twitchFetch(clipsUrl);
+    if (!clipResponse.ok) throw new Error('Twitch Get Clips ' + clipResponse.status + ': ' + (await clipResponse.text()).slice(0, 250));
+    const payload = await clipResponse.json();
+    clips.push(...(payload.data || []));
+    clipCursor = payload.pagination?.cursor || null;
+    if (!clipCursor) break;
+  }
+  const monthStart = period.start + 'T00:00:00';
+  const monthVideos = videos.filter(item => item.published_at && item.published_at >= monthStart);
+  const monthClips = clips;
+  const videoViews = monthVideos.reduce((sum, item) => sum + (Number(item.view_count) || 0), 0);
+  const clipViews = monthClips.reduce((sum, item) => sum + (Number(item.view_count) || 0), 0);
+  const totalViews = videoViews + clipViews;
+
   const periods = await airtableUpsert(env, SOCIAL.periods, PERIOD_FIELDS.name, [{
     [PERIOD_FIELDS.name]: period.name, [PERIOD_FIELDS.start]: period.start, [PERIOD_FIELDS.end]: period.end, [PERIOD_FIELDS.status]: 'En cours'
   }]);
   if (!periods[0]?.id) throw new Error('Identifiant de période Airtable absent');
   const fields = {
-    [SOCIAL_FIELDS.entry]: period.name + ' — Twitch', [SOCIAL_FIELDS.period]: [periods[0].id],
-    [SOCIAL_FIELDS.platform]: 'Twitch', [SOCIAL_FIELDS.followers]: Number(result.total),
-    [SOCIAL_FIELDS.source]: 'API', [SOCIAL_FIELDS.status]: 'Synchronisée', [SOCIAL_FIELDS.syncedAt]: new Date().toISOString(),
-    [SOCIAL_FIELDS.syncDetail]: 'Total des followers récupéré via Twitch Helix Get Channel Followers.'
+    [SOCIAL_FIELDS.entry]: period.name + ' — Twitch',
+    [SOCIAL_FIELDS.period]: [periods[0].id],
+    [SOCIAL_FIELDS.platform]: 'Twitch',
+    [SOCIAL_FIELDS.followers]: followers,
+    [SOCIAL_FIELDS.newFollowers]: monthlyNewFollowers,
+    [SOCIAL_FIELDS.views]: totalViews,
+    [SOCIAL_FIELDS.notes]: 'Abonnés gagnés : estimation calculée entre les synchronisations depuis l’activation du suivi. Vues : cumul des vues des VODs et clips publiés pendant le mois (pas uniquement les vues gagnées ce mois). Interactions : non disponibles via les points de terminaison publics Twitch utilisés.',
+    [SOCIAL_FIELDS.source]: 'API',
+    [SOCIAL_FIELDS.status]: 'Synchronisée',
+    [SOCIAL_FIELDS.syncedAt]: new Date().toISOString(),
+    [SOCIAL_FIELDS.syncDetail]: 'Followers via Twitch Helix. Vues = ' + videoViews + ' sur ' + monthVideos.length + ' VOD(s) + ' + clipViews + ' sur ' + monthClips.length + ' clip(s) publiés depuis le ' + period.start + '. Interactions non disponibles via Helix public.'
   };
   const records = await airtableUpsert(env, SOCIAL.table, SOCIAL_FIELDS.entry, [fields]);
+  await Promise.all([
+    env.TWITCH_TOKEN_STORE.put(previousFollowersKey, String(followers)),
+    env.TWITCH_TOKEN_STORE.put(monthlyFollowersKey, String(monthlyNewFollowers))
+  ]);
   const linksResult = await linkPreviousSocialRecords(env);
-  return { platform: 'Twitch', channel: user.display_name || user.login, period: period.name, followers: Number(result.total), recordId: records[0]?.id || null, previousMonthLinksCreated: linksResult.linked };
+  return {
+    platform: 'Twitch', channel: user.display_name || user.login, period: period.name,
+    followers, newFollowers: monthlyNewFollowers, views: totalViews,
+    videoViews, clipViews, interactions: 'non disponibles via l’API publique Twitch',
+    recordId: records[0]?.id || null, previousMonthLinksCreated: linksResult.linked
+  };
 }
 
 async function handle(request, env) {
@@ -699,7 +770,7 @@ export default {
   scheduled: async (event, env, ctx) => {
     ctx.waitUntil(
       Promise.allSettled([syncMatches(env), linkPreviousSocialRecords(env), syncYoutubePublicStats(env), syncYoutubeAnalytics(env), syncTwitchStats(env)])
-        .then(([matches, socialLinks, youtube, twitch]) => {
+        .then(([matches, socialLinks, youtube, youtubeAnalytics, twitch]) => {
           if (matches.status === "fulfilled") console.log("BLF_SYNC_OK", JSON.stringify(matches.value));
           else console.error("BLF_SYNC_ERROR", matches.reason?.stack || matches.reason?.message || String(matches.reason));
           if (socialLinks.status === "fulfilled") console.log("BLF_SOCIAL_LINKS_OK", JSON.stringify(socialLinks.value));
