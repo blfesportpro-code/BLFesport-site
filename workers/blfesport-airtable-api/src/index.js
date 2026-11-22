@@ -677,7 +677,8 @@ const DISCORD_STATS = {
   joins: "fldeRiziAWOdUHIHK",
   leaves: "fldDBFeeFSSN1AA8h",
   messages: "fldHpkCiEKFjXznE0",
-  active: "fldKjpTI7GDR6eDA4"
+  active: "fldKjpTI7GDR6eDA4",
+  notes: "fldP0Azz0w93OUqWg"
 };
 
 function discordParisMonth(date = new Date()) {
@@ -938,9 +939,18 @@ export class DiscordGateway extends DurableObject {
     if (!period) throw new Error("Période Airtable introuvable : " + periodLabel);
 
     const discordRows = await listRecords(env, DISCORD_STATS.table);
-    const existing = discordRows.find(row =>
+    const periodRowsForDiscord = discordRows.filter(row =>
       links(val(row.fields, DISCORD_STATS.periodLink)).some(link => link.id === period.id)
     );
+    // En cas de doublon historique, conserver en priorité la ligne qui contient
+    // les notes manuelles, puis la plus ancienne. Les autres lignes ne sont jamais
+    // supprimées automatiquement afin de ne perdre aucune donnée.
+    const existing = periodRowsForDiscord.sort((a, b) => {
+      const aHasNotes = Boolean(val(a.fields, DISCORD_STATS.notes));
+      const bHasNotes = Boolean(val(b.fields, DISCORD_STATS.notes));
+      if (aHasNotes !== bHasNotes) return aHasNotes ? -1 : 1;
+      return String(a.createdTime || "").localeCompare(String(b.createdTime || ""));
+    })[0] || null;
     const fields = {
       [DISCORD_STATS.entry]: periodLabel + " — Discord",
       [DISCORD_STATS.periodLink]: [period.id],
