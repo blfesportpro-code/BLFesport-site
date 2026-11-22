@@ -815,6 +815,82 @@ async function handle(request, env) {
   if (request.method !== "GET") return json({ error: "Method not allowed" }, 405, corsOrigin);
   try {
     if (path === "/health") return json({ service: "BLFesport Airtable API", status: "operational" }, 200, corsOrigin);
+    if (path === "/api/social-stats") {
+      const [periodRecords, socialRecords] = await Promise.all([
+        listRecords(env, "tblWim9FzbegjIgj9"),
+        listRecords(env, "tblSBSZwyhOqpUOy7")
+      ]);
+      const periodFields = {
+        name: "fldhaW4RtCuaeZtXN", start: "fldNsRA3SaSwmNc4m",
+        totalFollowers: "fldS3R7cGsstkNE7p", newFollowers: "fldfmFOM9tJPuqjot",
+        posts: "fldpFMaihe4vzlerF", views: "fldODXygYpJ2EtCJa",
+        interactions: "fldtX5XIu9Sv8QeLl", matches: "fldED6KQmb1ZCEa5o",
+        wins: "fldAkmObLJOuyAO4e", winRate: "fldAm4Tv0yWMJSXY6",
+        previous: "fldtyD5Wa4McyOs6n", deltaViews: "fldeusvdVN3G2A0g9",
+        deltaFollowers: "fldNrNHn7r1g6MYZn", deltaInteractions: "fldkWACIplzvUa0H8"
+      };
+      const socialFields = {
+        name: "fldVAc6U6BHj3Gsj2", period: "fld6lEMD8yfmanPRe",
+        platform: "fldCPgNpDnR4pOe5S", followers: "fldJVoRsh5vlSwPqm",
+        newFollowers: "fld5UYbUBilrz7Vpu", posts: "fldvio3JpgLsFvqha",
+        views: "fld2Szh4ZElmDcT5j", interactions: "fldQFy3rJPrNaesUX",
+        source: "fldZBQ4ubK3Hp8knU", syncStatus: "fldFgxFaR2y25tjLf",
+        lastSync: "fldoodNBxf2YBwkcW"
+      };
+      const periods = periodRecords.map(record => {
+        const x = record.fields || {};
+        const previous = links(val(x, periodFields.previous));
+        return {
+          id: record.id, name: val(x, periodFields.name),
+          start: val(x, periodFields.start),
+          totalFollowers: val(x, periodFields.totalFollowers) ?? 0,
+          newFollowers: val(x, periodFields.newFollowers) ?? 0,
+          posts: val(x, periodFields.posts) ?? 0,
+          views: val(x, periodFields.views) ?? 0,
+          interactions: val(x, periodFields.interactions) ?? 0,
+          matches: val(x, periodFields.matches) ?? 0,
+          wins: val(x, periodFields.wins) ?? 0,
+          winRate: val(x, periodFields.winRate) ?? 0,
+          previousPeriodId: previous[0]?.id || null,
+          deltaViews: val(x, periodFields.deltaViews),
+          deltaFollowers: val(x, periodFields.deltaFollowers),
+          deltaInteractions: val(x, periodFields.deltaInteractions)
+        };
+      }).sort((a, b) => String(a.start || "").localeCompare(String(b.start || "")));
+      const periodById = new Map(periods.map(period => [period.id, period]));
+      const social = socialRecords.map(record => {
+        const x = record.fields || {};
+        const periodLink = links(val(x, socialFields.period));
+        const platformValue = val(x, socialFields.platform);
+        const statusValue = val(x, socialFields.syncStatus);
+        const sourceValue = val(x, socialFields.source);
+        return {
+          id: record.id, name: val(x, socialFields.name),
+          periodId: periodLink[0]?.id || null,
+          platform: platformValue?.name || platformValue || "Réseau",
+          followers: val(x, socialFields.followers) ?? 0,
+          newFollowers: val(x, socialFields.newFollowers) ?? 0,
+          posts: val(x, socialFields.posts) ?? 0,
+          views: val(x, socialFields.views) ?? 0,
+          interactions: val(x, socialFields.interactions) ?? 0,
+          source: sourceValue?.name || sourceValue || "",
+          syncStatus: statusValue?.name || statusValue || "",
+          lastSync: val(x, socialFields.lastSync)
+        };
+      });
+      const latest = periods[periods.length - 1] || null;
+      const previous = latest?.previousPeriodId ? periodById.get(latest.previousPeriodId) || null : null;
+      return json({
+        updatedAt: new Date().toISOString(),
+        current: latest,
+        previous,
+        history: periods.slice(-12).map(period => ({
+          name: period.name, views: period.views, newFollowers: period.newFollowers,
+          interactions: period.interactions, posts: period.posts
+        })),
+        social: social.filter(row => !latest || row.periodId === latest.id)
+      }, 200, corsOrigin);
+    }
     if (path === "/api/matches") {
       const records = await listRecords(env, TABLES.matches);
       return json(records.map(record => {
