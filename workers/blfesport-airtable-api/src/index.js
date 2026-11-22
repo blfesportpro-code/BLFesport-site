@@ -707,26 +707,6 @@ export class DiscordGateway extends DurableObject {
 
   async fetch(request) {
     const path = new URL(request.url).pathname;
-  if (request.method === "POST" && path === "/admin/discord/start") {
-    if (!env.SYNC_SECRET || request.headers.get("Authorization") !== `Bearer ${env.SYNC_SECRET}`) {
-      return json({ error: "Non autorisé" }, 401, corsOrigin);
-    }
-    if (!env.DISCORD_BOT_TOKEN || !env.DISCORD_GATEWAY) {
-      return json({ error: "Bot Discord non configuré : secret DISCORD_BOT_TOKEN ou binding DISCORD_GATEWAY manquant." }, 503, corsOrigin);
-    }
-    const id = env.DISCORD_GATEWAY.idFromName("blfesport-discord-stats");
-    const stub = env.DISCORD_GATEWAY.get(id);
-    return stub.fetch("https://discord-gateway.internal/start", { method: "POST" });
-  }
-  if (request.method === "GET" && path === "/admin/discord/status") {
-    if (!env.SYNC_SECRET || request.headers.get("Authorization") !== `Bearer ${env.SYNC_SECRET}`) {
-      return json({ error: "Non autorisé" }, 401, corsOrigin);
-    }
-    if (!env.DISCORD_GATEWAY) return json({ error: "Binding DISCORD_GATEWAY manquant." }, 503, corsOrigin);
-    const id = env.DISCORD_GATEWAY.idFromName("blfesport-discord-stats");
-    const stub = env.DISCORD_GATEWAY.get(id);
-    return stub.fetch("https://discord-gateway.internal/status");
-  }
     if (path === "/start" && request.method === "POST") {
       if (!this.env.DISCORD_BOT_TOKEN) return json({ error: "Secret DISCORD_BOT_TOKEN absent dans Cloudflare." }, 503);
       await this.ctx.storage.put("enabled", true);
@@ -979,6 +959,26 @@ async function handle(request, env) {
   }});
   if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID) return json({ error: "Airtable non configuré" }, 503, corsOrigin);
   const path = new URL(request.url).pathname;
+  if (request.method === "POST" && path === "/admin/discord/start") {
+    if (!env.SYNC_SECRET || request.headers.get("Authorization") !== `Bearer ${env.SYNC_SECRET}`) {
+      return json({ error: "Non autorisé" }, 401, corsOrigin);
+    }
+    if (!env.DISCORD_BOT_TOKEN || !env.DISCORD_GATEWAY) {
+      return json({ error: "Bot Discord non configuré : secret DISCORD_BOT_TOKEN ou binding DISCORD_GATEWAY manquant." }, 503, corsOrigin);
+    }
+    const id = env.DISCORD_GATEWAY.idFromName("blfesport-discord-stats");
+    const stub = env.DISCORD_GATEWAY.get(id);
+    return stub.fetch("https://discord-gateway.internal/start", { method: "POST" });
+  }
+  if (request.method === "GET" && path === "/admin/discord/status") {
+    if (!env.SYNC_SECRET || request.headers.get("Authorization") !== `Bearer ${env.SYNC_SECRET}`) {
+      return json({ error: "Non autorisé" }, 401, corsOrigin);
+    }
+    if (!env.DISCORD_GATEWAY) return json({ error: "Binding DISCORD_GATEWAY manquant." }, 503, corsOrigin);
+    const id = env.DISCORD_GATEWAY.idFromName("blfesport-discord-stats");
+    const stub = env.DISCORD_GATEWAY.get(id);
+    return stub.fetch("https://discord-gateway.internal/status");
+  }
   if (request.method === "GET" && path === "/oauth/youtube/start") {
     if (!env.YOUTUBE_TOKEN_STORE || !env.YOUTUBE_CLIENT_ID || !env.YOUTUBE_REDIRECT_URI) return json({ error: "Configuration OAuth YouTube/KV incomplète" }, 503, corsOrigin);
     const state = crypto.randomUUID();
