@@ -72,7 +72,8 @@
 <script>
 (() => {
  const $ = id => document.getElementById(id);
- const stored = localStorage.getItem("blf_stats_api_url") || "";
+ const DEFAULT_API_URL = "https://blfesport-airtable-api.enzo-reuziault.workers.dev";
+ const stored = localStorage.getItem("blf_stats_api_url") || DEFAULT_API_URL;
  $("apiUrl").value = stored;
  const fmt = n => Number(n || 0).toLocaleString("fr-FR");
  const safe = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -115,7 +116,7 @@
  }
  $("saveApi").addEventListener("click",load);
  $("apiUrl").addEventListener("keydown",e=>{if(e.key==="Enter")load();});
- if(stored)load();
+ load();
 })();
 </script>
 </body></html>
