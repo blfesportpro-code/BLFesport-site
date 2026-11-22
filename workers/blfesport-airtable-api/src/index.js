@@ -355,7 +355,7 @@ const PERIOD_FIELDS = {
 };
 function currentParisPeriod() {
   const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Europe/Paris", year: "numeric", month: "2-digit"
+    timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit"
   }).formatToParts(new Date());
   const year = Number(parts.find(x => x.type === "year")?.value);
   const month = Number(parts.find(x => x.type === "month")?.value);
