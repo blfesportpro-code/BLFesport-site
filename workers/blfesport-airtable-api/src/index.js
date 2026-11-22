@@ -174,7 +174,8 @@ const SOCIAL = {
   periodLink: "fld6lEMD8yfmanPRe",
   platform: "fldCPgNpDnR4pOe5S",
   previousLink: "fldvnJMvpp86qMieR",
-  periodName: "fldhaW4RtCuaeZtXN"
+  periodName: "fldhaW4RtCuaeZtXN",
+  previousPeriod: "fldtyD5Wa4McyOs6n"
 };
 function parisMonthKey(date = new Date()) {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -205,55 +206,81 @@ async function linkPreviousSocialRecords(env) {
   const periodKeyById = new Map(periodRows.map(row => [
     row.id, val(row.fields, SOCIAL.periodName)
   ]));
+  const periodIdByKey = new Map();
+  for (const row of periodRows) {
+    const key = periodNameToKey(val(row.fields, SOCIAL.periodName));
+    if (key) periodIdByKey.set(key, row.id);
+  }
+
+  // Relier les périodes entre elles pour alimenter les comparaisons mensuelles.
+  const periodUpdates = [];
+  for (const row of periodRows) {
+    const key = periodNameToKey(val(row.fields, SOCIAL.periodName));
+    const previousKey = previousMonthKey(key);
+    const previousId = previousKey && periodIdByKey.get(previousKey);
+    const existing = links(val(row.fields, SOCIAL.previousPeriod));
+    if (previousId && previousId !== row.id && !existing.includes(previousId)) {
+      periodUpdates.push({ id: row.id, fields: { [SOCIAL.previousPeriod]: [previousId] } });
+    }
+  }
+
   const socialByPeriodPlatform = new Map();
   for (const row of socialRows) {
     const fields = row.fields || {};
-    const periodIds = links(val(fields, SOCIAL.periodLink));
     const platform = val(fields, SOCIAL.platform);
     if (!platform) continue;
-    for (const periodId of periodIds) {
+    for (const periodId of links(val(fields, SOCIAL.periodLink))) {
       const key = periodNameToKey(periodKeyById.get(periodId));
       if (key) socialByPeriodPlatform.set(`${key}|${platform}`, row.id);
     }
   }
-  const updates = [];
+  const socialUpdates = [];
   for (const row of socialRows) {
     const fields = row.fields || {};
     if (links(val(fields, SOCIAL.previousLink)).length) continue;
     const platform = val(fields, SOCIAL.platform);
-    const periodIds = links(val(fields, SOCIAL.periodLink));
-    for (const periodId of periodIds) {
+    for (const periodId of links(val(fields, SOCIAL.periodLink))) {
       const key = periodNameToKey(periodKeyById.get(periodId));
       const previousKey = previousMonthKey(key);
       const previousId = previousKey && socialByPeriodPlatform.get(`${previousKey}|${platform}`);
       if (previousId && previousId !== row.id) {
-        updates.push({ id: row.id, fields: { [SOCIAL.previousLink]: [previousId] } });
+        socialUpdates.push({ id: row.id, fields: { [SOCIAL.previousLink]: [previousId] } });
         break;
       }
     }
   }
-  let linked = 0;
-  for (let i = 0; i < updates.length; i += 10) {
-    const response = await fetch(
-      `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${SOCIAL.table}`,
-      {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
-          "content-type": "application/json"
-        },
-        body: JSON.stringify({ records: updates.slice(i, i + 10) })
-      }
-    );
-    if (!response.ok) throw new Error(`Lien mensuel Airtable ${response.status}: ${(await response.text()).slice(0, 300)}`);
-    const result = await response.json();
-    linked += (result.records || []).length;
+
+  async function patch(tableId, records, label) {
+    let count = 0;
+    for (let i = 0; i < records.length; i += 10) {
+      const response = await fetch(
+        `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${tableId}`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+            "content-type": "application/json"
+          },
+          body: JSON.stringify({ records: records.slice(i, i + 10) })
+        }
+      );
+      if (!response.ok) throw new Error(`${label} Airtable ${response.status}: ${(await response.text()).slice(0, 300)}`);
+      count += ((await response.json()).records || []).length;
+    }
+    return count;
   }
+
+  const linkedPeriods = await patch(SOCIAL.periods, periodUpdates, "Lien entre périodes");
+  const linkedSocial = await patch(SOCIAL.table, socialUpdates, "Lien mensuel");
   return {
+    checkedPeriods: periodRows.length,
+    linkedPeriods,
     checked: socialRows.length,
-    linked,
+    linked: linkedSocial,
     currentMonth: parisMonthKey(),
-    note: linked ? "Liens vers le relevé du mois précédent créés." : "Aucun lien manquant avec un relevé précédent disponible."
+    note: linkedPeriods || linkedSocial
+      ? "Liens vers le mois précédent créés pour les périodes et les réseaux disponibles."
+      : "Aucun lien manquant avec un mois précédent disponible."
   };
 }
 
