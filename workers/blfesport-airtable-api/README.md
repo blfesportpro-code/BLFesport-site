@@ -7,6 +7,7 @@ Cette passerelle Cloudflare Worker expose les données Airtable en **lecture seu
 - `GET /api/matches` : calendrier et résultats Rocket League.
 - `GET /api/player-stats` : statistiques individuelles.
 - `GET /api/summary` : bilan global des matchs.
+- `GET /api/social-stats` : statistiques mensuelles des réseaux, comparaisons et historique pour le Statistics Center.
 
 ## Déploiement Cloudflare
 1. Créer un Worker nommé `blfesport-airtable-api`.
