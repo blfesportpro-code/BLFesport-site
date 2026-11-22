@@ -6,6 +6,14 @@ compatibility_date = "2026-11-21"
 AIRTABLE_BASE_ID = "appJbBen6zC2vdpj6"
 ALLOWED_ORIGIN = "https://blfesportpro-code.github.io"
 
+[[durable_objects.bindings]]
+name = "DISCORD_GATEWAY"
+class_name = "DiscordGateway"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["DiscordGateway"]
+
 [triggers]
 crons = ["*/15 * * * *"]
 
