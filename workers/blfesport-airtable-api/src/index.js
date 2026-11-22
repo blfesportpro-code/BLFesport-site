@@ -980,7 +980,6 @@ async function handle(request, env) {
     }
   }
   if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID) return json({ error: "Airtable non configuré" }, 503, corsOrigin);
-  const path = new URL(request.url).pathname;
   if (request.method === "POST" && path === "/admin/discord/start") {
     if (!env.SYNC_SECRET || request.headers.get("Authorization") !== `Bearer ${env.SYNC_SECRET}`) {
       return json({ error: "Non autorisé" }, 401, corsOrigin);
