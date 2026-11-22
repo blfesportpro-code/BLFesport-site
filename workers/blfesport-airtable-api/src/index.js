@@ -668,6 +668,7 @@ async function syncTwitchStats(env) {
 
 
 const DISCORD_STATS = {
+  guildId: "1305208753150365697",
   table: "tblfE8o3XxR5mC5ET",
   periods: "tblWim9FzbegjIgj9",
   periodName: "fldhaW4RtCuaeZtXN",
@@ -707,22 +708,18 @@ export class DiscordGateway extends DurableObject {
   async fetch(request) {
     const path = new URL(request.url).pathname;
   if (request.method === "POST" && path === "/admin/discord/start") {
-    if (!env.SYNC_SECRET || request.headers.get("Authorization") !== "Bearer " + env.SYNC_SECRET) {
+    if (!env.SYNC_SECRET || request.headers.get("Authorization") !== `Bearer ${env.SYNC_SECRET}`) {
       return json({ error: "Non autorisé" }, 401, corsOrigin);
     }
     if (!env.DISCORD_BOT_TOKEN || !env.DISCORD_GATEWAY) {
       return json({ error: "Bot Discord non configuré : secret DISCORD_BOT_TOKEN ou binding DISCORD_GATEWAY manquant." }, 503, corsOrigin);
     }
-    try {
-      const id = env.DISCORD_GATEWAY.idFromName("blfesport-discord-stats");
-      const stub = env.DISCORD_GATEWAY.get(id);
-      return await stub.fetch("https://discord-gateway.internal/start", { method: "POST" });
-    } catch (error) {
-      return json({ error: "Démarrage du bot Discord impossible", detail: error.message }, 502, corsOrigin);
-    }
+    const id = env.DISCORD_GATEWAY.idFromName("blfesport-discord-stats");
+    const stub = env.DISCORD_GATEWAY.get(id);
+    return stub.fetch("https://discord-gateway.internal/start", { method: "POST" });
   }
   if (request.method === "GET" && path === "/admin/discord/status") {
-    if (!env.SYNC_SECRET || request.headers.get("Authorization") !== "Bearer " + env.SYNC_SECRET) {
+    if (!env.SYNC_SECRET || request.headers.get("Authorization") !== `Bearer ${env.SYNC_SECRET}`) {
       return json({ error: "Non autorisé" }, 401, corsOrigin);
     }
     if (!env.DISCORD_GATEWAY) return json({ error: "Binding DISCORD_GATEWAY manquant." }, 503, corsOrigin);
@@ -840,11 +837,8 @@ export class DiscordGateway extends DurableObject {
       return;
     }
     if (packet.t === "GUILD_CREATE") {
-      let targetGuildId = await this.ctx.storage.get("guildId");
-      if (!targetGuildId) {
-        targetGuildId = data.id;
-        await this.ctx.storage.put("guildId", targetGuildId);
-      }
+      const targetGuildId = DISCORD_STATS.guildId;
+      await this.ctx.storage.put("guildId", targetGuildId);
       if (data.id !== targetGuildId) return;
       if (Number.isFinite(data.member_count)) {
         const stats = await this.getMonthStats();
