@@ -1,3 +1,4 @@
+import { DurableObject } from "cloudflare:workers";
 /**
  * BLFesport Manager — synchronisation SITE/DISCORD -> AIRTABLE.
  * Secrets Cloudflare : AIRTABLE_TOKEN (read + write), SYNC_SECRET.
@@ -662,6 +663,299 @@ async function syncTwitchStats(env) {
     videoViews, clipViews, interactions: 'non disponibles via l’API publique Twitch',
     recordId: records[0]?.id || null, previousMonthLinksCreated: linksResult.linked
   };
+}
+
+
+
+const DISCORD_STATS = {
+  table: "tblfE8o3XxR5mC5ET",
+  periods: "tblWim9FzbegjIgj9",
+  periodName: "fldhaW4RtCuaeZtXN",
+  periodLink: "fldXU0WzBQVnookDM",
+  entry: "fldUZbBCBHYLDWhqJ",
+  members: "fldxdENniPsJM4Vx4",
+  joins: "fldeRiziAWOdUHIHK",
+  leaves: "fldDBFeeFSSN1AA8h",
+  messages: "fldHpkCiEKFjXznE0",
+  active: "fldKjpTI7GDR6eDA4"
+};
+
+function discordParisMonth(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Paris", year: "numeric", month: "2-digit"
+  }).formatToParts(date);
+  return (parts.find(x => x.type === "year")?.value || "") + "-" +
+    (parts.find(x => x.type === "month")?.value || "");
+}
+
+function discordPeriodLabel(key) {
+  const parts = key.split("-").map(Number);
+  const date = new Date(Date.UTC(parts[0], parts[1] - 1, 1));
+  const label = new Intl.DateTimeFormat("fr-FR", { month: "long", timeZone: "Europe/Paris" }).format(date);
+  return label.charAt(0).toLocaleUpperCase("fr-FR") + label.slice(1) + " " + parts[0];
+}
+
+export class DiscordGateway extends DurableObject {
+  constructor(ctx, env) {
+    super(ctx, env);
+    this.ctx = ctx;
+    this.env = env;
+    this.socket = null;
+  }
+
+  async fetch(request) {
+    const path = new URL(request.url).pathname;
+  if (request.method === "POST" && path === "/admin/discord/start") {
+    if (!env.SYNC_SECRET || request.headers.get("Authorization") !== "Bearer " + env.SYNC_SECRET) {
+      return json({ error: "Non autorisé" }, 401, corsOrigin);
+    }
+    if (!env.DISCORD_BOT_TOKEN || !env.DISCORD_GATEWAY) {
+      return json({ error: "Bot Discord non configuré : secret DISCORD_BOT_TOKEN ou binding DISCORD_GATEWAY manquant." }, 503, corsOrigin);
+    }
+    try {
+      const id = env.DISCORD_GATEWAY.idFromName("blfesport-discord-stats");
+      const stub = env.DISCORD_GATEWAY.get(id);
+      return await stub.fetch("https://discord-gateway.internal/start", { method: "POST" });
+    } catch (error) {
+      return json({ error: "Démarrage du bot Discord impossible", detail: error.message }, 502, corsOrigin);
+    }
+  }
+  if (request.method === "GET" && path === "/admin/discord/status") {
+    if (!env.SYNC_SECRET || request.headers.get("Authorization") !== "Bearer " + env.SYNC_SECRET) {
+      return json({ error: "Non autorisé" }, 401, corsOrigin);
+    }
+    if (!env.DISCORD_GATEWAY) return json({ error: "Binding DISCORD_GATEWAY manquant." }, 503, corsOrigin);
+    const id = env.DISCORD_GATEWAY.idFromName("blfesport-discord-stats");
+    const stub = env.DISCORD_GATEWAY.get(id);
+    return stub.fetch("https://discord-gateway.internal/status");
+  }
+    if (path === "/start" && request.method === "POST") {
+      if (!this.env.DISCORD_BOT_TOKEN) return json({ error: "Secret DISCORD_BOT_TOKEN absent dans Cloudflare." }, 503);
+      await this.ctx.storage.put("enabled", true);
+      await this.connectGateway();
+      return json({ status: "starting", service: "BLFesport Discord Stats" });
+    }
+    if (path === "/status" && request.method === "GET") {
+      return json({
+        enabled: Boolean(await this.ctx.storage.get("enabled")),
+        connected: Boolean(this.socket && this.socket.readyState === WebSocket.OPEN),
+        guildId: await this.ctx.storage.get("guildId") || null,
+        lastReadyAt: await this.ctx.storage.get("lastReadyAt") || null,
+        lastSyncAt: await this.ctx.storage.get("lastSyncAt") || null,
+        lastError: await this.ctx.storage.get("lastError") || null
+      });
+    }
+    return json({ error: "Not found" }, 404);
+  }
+
+  async connectGateway() {
+    if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) return;
+    const sessionId = await this.ctx.storage.get("sessionId");
+    const sequence = await this.ctx.storage.get("sequence");
+    const resumeUrl = await this.ctx.storage.get("resumeUrl");
+    const gateway = new URL(resumeUrl || "wss://gateway.discord.gg/");
+    gateway.searchParams.set("v", "10");
+    gateway.searchParams.set("encoding", "json");
+    const ws = new WebSocket(gateway.toString());
+    this.socket = ws;
+    ws.addEventListener("message", event => {
+      this.onGatewayMessage(event.data).catch(async error => {
+        await this.ctx.storage.put("lastError", String(error?.message || error));
+        console.error("BLF_DISCORD_GATEWAY_MESSAGE_ERROR", error?.stack || error);
+      });
+    });
+    ws.addEventListener("close", () => {
+      if (this.socket === ws) this.socket = null;
+      this.scheduleReconnect();
+    });
+    ws.addEventListener("error", () => {
+      if (this.socket === ws) this.socket = null;
+      try { ws.close(); } catch {}
+      this.scheduleReconnect();
+    });
+    await this.ctx.storage.setAlarm(Date.now() + 15000);
+    console.log("BLF_DISCORD_GATEWAY_CONNECTING", JSON.stringify({ resuming: Boolean(sessionId && sequence != null) }));
+  }
+
+  async sendGateway(payload) {
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return false;
+    this.socket.send(JSON.stringify(payload));
+    return true;
+  }
+
+  async onGatewayMessage(raw) {
+    const packet = JSON.parse(typeof raw === "string" ? raw : new TextDecoder().decode(raw));
+    if (packet.s != null) await this.ctx.storage.put("sequence", packet.s);
+
+    if (packet.op === 10) {
+      const interval = Number(packet.d?.heartbeat_interval || 45000);
+      await this.ctx.storage.put("heartbeatInterval", interval);
+      await this.ctx.storage.put("awaitingHeartbeatAck", false);
+      const sessionId = await this.ctx.storage.get("sessionId");
+      const sequence = await this.ctx.storage.get("sequence");
+      const resumeUrl = await this.ctx.storage.get("resumeUrl");
+      if (sessionId && sequence != null && resumeUrl) {
+        await this.sendGateway({ op: 6, d: { token: this.env.DISCORD_BOT_TOKEN, session_id: sessionId, seq: sequence } });
+      } else {
+        await this.sendGateway({
+          op: 2,
+          d: {
+            token: this.env.DISCORD_BOT_TOKEN,
+            intents: 515,
+            properties: { os: "cloudflare-workers", browser: "blfesport-stats", device: "blfesport-stats" }
+          }
+        });
+      }
+      await this.ctx.storage.setAlarm(Date.now() + Math.floor(Math.random() * interval));
+      return;
+    }
+
+    if (packet.op === 11) {
+      await this.ctx.storage.put("awaitingHeartbeatAck", false);
+      return;
+    }
+    if (packet.op === 7) {
+      await this.reconnectNow();
+      return;
+    }
+    if (packet.op === 9) {
+      if (!packet.d) {
+        await this.ctx.storage.delete("sessionId");
+        await this.ctx.storage.delete("sequence");
+        await this.ctx.storage.delete("resumeUrl");
+      }
+      await this.reconnectNow();
+      return;
+    }
+    if (packet.op !== 0) return;
+
+    const data = packet.d || {};
+    if (packet.t === "READY") {
+      await this.ctx.storage.put("sessionId", data.session_id);
+      await this.ctx.storage.put("resumeUrl", data.resume_gateway_url);
+      await this.ctx.storage.put("lastReadyAt", new Date().toISOString());
+      await this.ctx.storage.delete("lastError");
+      console.log("BLF_DISCORD_READY", JSON.stringify({ user: data.user?.username, guilds: data.guilds?.length || 0 }));
+      return;
+    }
+    if (packet.t === "GUILD_CREATE") {
+      await this.ctx.storage.put("guildId", data.id);
+      if (Number.isFinite(data.member_count)) {
+        const stats = await this.getMonthStats();
+        stats.members = data.member_count;
+        await this.putMonthStats(stats);
+      }
+      return;
+    }
+    if (packet.t === "GUILD_MEMBER_ADD") {
+      const stats = await this.getMonthStats();
+      stats.joins += 1;
+      if (stats.members != null) stats.members += 1;
+      await this.putMonthStats(stats);
+      return;
+    }
+    if (packet.t === "GUILD_MEMBER_REMOVE") {
+      const stats = await this.getMonthStats();
+      stats.leaves += 1;
+      if (stats.members != null) stats.members = Math.max(0, stats.members - 1);
+      await this.putMonthStats(stats);
+      return;
+    }
+    if (packet.t === "MESSAGE_CREATE" && data.guild_id && data.author?.id && !data.author?.bot) {
+      const stats = await this.getMonthStats();
+      stats.messages += 1;
+      if (!stats.activeUsers.includes(data.author.id)) stats.activeUsers.push(data.author.id);
+      await this.putMonthStats(stats);
+    }
+  }
+
+  async getMonthStats() {
+    const month = discordParisMonth();
+    const stored = await this.ctx.storage.get("stats:" + month);
+    return stored || { month, members: null, joins: 0, leaves: 0, messages: 0, activeUsers: [] };
+  }
+
+  async putMonthStats(stats) {
+    await this.ctx.storage.put("stats:" + stats.month, stats);
+  }
+
+  async reconnectNow() {
+    const ws = this.socket;
+    this.socket = null;
+    if (ws) {
+      try { ws.close(4000, "Reconnecting"); } catch {}
+    }
+    await this.ctx.storage.setAlarm(Date.now() + 5000);
+  }
+
+  async scheduleReconnect() {
+    if (await this.ctx.storage.get("enabled")) {
+      await this.ctx.storage.setAlarm(Date.now() + 10000);
+    }
+  }
+
+  async alarm() {
+    if (!(await this.ctx.storage.get("enabled"))) return;
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+      await this.connectGateway();
+      return;
+    }
+    const interval = Number(await this.ctx.storage.get("heartbeatInterval") || 45000);
+    const awaitingAck = Boolean(await this.ctx.storage.get("awaitingHeartbeatAck"));
+    if (awaitingAck) {
+      await this.reconnectNow();
+      return;
+    }
+    await this.ctx.storage.put("awaitingHeartbeatAck", true);
+    await this.sendGateway({ op: 1, d: (await this.ctx.storage.get("sequence")) ?? null });
+
+    const lastSyncAt = Number(await this.ctx.storage.get("lastSyncAt") || 0);
+    if (Date.now() - lastSyncAt >= 15 * 60 * 1000) {
+      try {
+        await this.syncCurrentMonthToAirtable();
+        await this.ctx.storage.put("lastSyncAt", Date.now());
+        await this.ctx.storage.delete("lastError");
+      } catch (error) {
+        await this.ctx.storage.put("lastError", String(error?.message || error));
+        console.error("BLF_DISCORD_AIRTABLE_SYNC_ERROR", error?.stack || error);
+      }
+    }
+    await this.ctx.storage.setAlarm(Date.now() + interval);
+  }
+
+  async syncCurrentMonthToAirtable() {
+    const env = this.env;
+    if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID) throw new Error("Configuration Airtable absente.");
+    const stats = await this.getMonthStats();
+    const periodLabel = discordPeriodLabel(stats.month);
+    const periodRows = await listRecords(env, DISCORD_STATS.periods);
+    const period = periodRows.find(row => val(row.fields, DISCORD_STATS.periodName) === periodLabel);
+    if (!period) throw new Error("Période Airtable introuvable : " + periodLabel);
+
+    const discordRows = await listRecords(env, DISCORD_STATS.table);
+    const existing = discordRows.find(row =>
+      links(val(row.fields, DISCORD_STATS.periodLink)).some(link => link.id === period.id)
+    );
+    const fields = {
+      [DISCORD_STATS.entry]: periodLabel + " — Discord",
+      [DISCORD_STATS.periodLink]: [period.id],
+      [DISCORD_STATS.joins]: stats.joins,
+      [DISCORD_STATS.leaves]: stats.leaves,
+      [DISCORD_STATS.messages]: stats.messages,
+      [DISCORD_STATS.active]: stats.activeUsers.length
+    };
+    if (stats.members != null) fields[DISCORD_STATS.members] = stats.members;
+
+    const url = "https://api.airtable.com/v0/" + env.AIRTABLE_BASE_ID + "/" + DISCORD_STATS.table;
+    const response = await fetch(url, {
+      method: existing ? "PATCH" : "POST",
+      headers: { Authorization: "Bearer " + env.AIRTABLE_TOKEN, "content-type": "application/json" },
+      body: JSON.stringify({ records: [existing ? { id: existing.id, fields } : { fields }] })
+    });
+    if (!response.ok) throw new Error("Airtable Discord " + response.status + ": " + (await response.text()).slice(0, 300));
+    const result = await response.json();
+    return { period: periodLabel, recordId: result.records?.[0]?.id || existing?.id, messages: stats.messages };
+  }
 }
 
 async function handle(request, env) {
