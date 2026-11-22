@@ -957,6 +957,26 @@ async function handle(request, env) {
     "access-control-allow-headers": "Content-Type, Authorization",
     "access-control-max-age": "86400"
   }});
+  const path = new URL(request.url).pathname;
+  if (request.method === "GET" && path === "/discord/status") {
+    if (!env.DISCORD_GATEWAY) return json({ error: "Binding DISCORD_GATEWAY manquant." }, 503, corsOrigin);
+    try {
+      const id = env.DISCORD_GATEWAY.idFromName("blfesport-discord-stats");
+      const stub = env.DISCORD_GATEWAY.get(id);
+      const response = await stub.fetch("https://discord-gateway.internal/status");
+      const status = await response.json();
+      return json({
+        enabled: status.enabled,
+        connected: status.connected,
+        serverDetected: status.guildId === DISCORD_STATS.guildId,
+        lastReadyAt: status.lastReadyAt,
+        lastSyncAt: status.lastSyncAt,
+        hasError: Boolean(status.lastError)
+      }, 200, corsOrigin);
+    } catch (error) {
+      return json({ error: "Lecture du statut Discord impossible", detail: error.message }, 502, corsOrigin);
+    }
+  }
   if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID) return json({ error: "Airtable non configuré" }, 503, corsOrigin);
   const path = new URL(request.url).pathname;
   if (request.method === "POST" && path === "/admin/discord/start") {
