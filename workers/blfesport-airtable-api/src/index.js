@@ -890,7 +890,7 @@ export class DiscordGateway extends DurableObject {
     await this.sendGateway({ op: 1, d: (await this.ctx.storage.get("sequence")) ?? null });
 
     const lastSyncAt = Number(await this.ctx.storage.get("lastSyncAt") || 0);
-    if (Date.now() - lastSyncAt >= 15 * 60 * 1000) {
+    if (Date.now() - lastSyncAt >= 5 * 60 * 1000) {
       try {
         await this.syncCurrentMonthToAirtable();
         await this.ctx.storage.put("lastSyncAt", Date.now());
