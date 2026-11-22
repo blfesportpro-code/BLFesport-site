@@ -839,7 +839,12 @@ export class DiscordGateway extends DurableObject {
       return;
     }
     if (packet.t === "GUILD_CREATE") {
-      await this.ctx.storage.put("guildId", data.id);
+      let targetGuildId = await this.ctx.storage.get("guildId");
+      if (!targetGuildId) {
+        targetGuildId = data.id;
+        await this.ctx.storage.put("guildId", targetGuildId);
+      }
+      if (data.id !== targetGuildId) return;
       if (Number.isFinite(data.member_count)) {
         const stats = await this.getMonthStats();
         stats.members = data.member_count;
@@ -847,21 +852,21 @@ export class DiscordGateway extends DurableObject {
       }
       return;
     }
-    if (packet.t === "GUILD_MEMBER_ADD") {
+    if (packet.t === "GUILD_MEMBER_ADD" && data.guild_id === await this.ctx.storage.get("guildId")) {
       const stats = await this.getMonthStats();
       stats.joins += 1;
       if (stats.members != null) stats.members += 1;
       await this.putMonthStats(stats);
       return;
     }
-    if (packet.t === "GUILD_MEMBER_REMOVE") {
+    if (packet.t === "GUILD_MEMBER_REMOVE" && data.guild_id === await this.ctx.storage.get("guildId")) {
       const stats = await this.getMonthStats();
       stats.leaves += 1;
       if (stats.members != null) stats.members = Math.max(0, stats.members - 1);
       await this.putMonthStats(stats);
       return;
     }
-    if (packet.t === "MESSAGE_CREATE" && data.guild_id && data.author?.id && !data.author?.bot) {
+    if (packet.t === "MESSAGE_CREATE" && data.guild_id === await this.ctx.storage.get("guildId") && data.author?.id && !data.author?.bot) {
       const stats = await this.getMonthStats();
       stats.messages += 1;
       if (!stats.activeUsers.includes(data.author.id)) stats.activeUsers.push(data.author.id);
@@ -1221,6 +1226,16 @@ export default {
   fetch: handle,
   scheduled: async (event, env, ctx) => {
     ctx.waitUntil((async () => {
+      if (env.DISCORD_GATEWAY && env.DISCORD_BOT_TOKEN) {
+        try {
+          const id = env.DISCORD_GATEWAY.idFromName("blfesport-discord-stats");
+          const stub = env.DISCORD_GATEWAY.get(id);
+          const response = await stub.fetch("https://discord-gateway.internal/start", { method: "POST" });
+          console.log("BLF_DISCORD_GATEWAY_START", response.status, await response.text());
+        } catch (error) {
+          console.error("BLF_DISCORD_GATEWAY_START_ERROR", error?.stack || error?.message || String(error));
+        }
+      }
       try {
         console.log("BLF_PERIOD_CURRENT", JSON.stringify(await ensureCurrentPeriod(env)));
       } catch (error) {
