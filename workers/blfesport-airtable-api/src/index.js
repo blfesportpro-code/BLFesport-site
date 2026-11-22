@@ -198,6 +198,54 @@ function previousMonthKey(key) {
   const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 2, 1));
   return date.getUTCFullYear() + "-" + String(date.getUTCMonth() + 1).padStart(2, "0");
 }
+async function ensureCurrentPeriod(env) {
+  const period = currentParisPeriod();
+  const records = await airtableUpsert(env, SOCIAL.periods, PERIOD_FIELDS.name, [{
+    [PERIOD_FIELDS.name]: period.name,
+    [PERIOD_FIELDS.start]: period.start,
+    [PERIOD_FIELDS.end]: period.end,
+    [PERIOD_FIELDS.status]: "En cours"
+  }]);
+  if (!records[0]?.id) throw new Error("Impossible de créer/récupérer la période mensuelle actuelle.");
+  return { key: period.key, name: period.name, id: records[0].id };
+}
+
+async function generatePreviousMonthBilan(env) {
+  const current = currentParisPeriod();
+  // Attendre le 5 du mois pour laisser le temps aux plateformes de publier leurs statistiques différées.
+  if (current.day < 5) return { skipped: true, reason: "Génération différée au 5 du mois pour laisser remonter les statistiques." };
+  const previousKey = previousMonthKey(current.key);
+  const periodRows = await listRecords(env, SOCIAL.periods);
+  const previousPeriod = periodRows.find(row =>
+    periodNameToKey(val(row.fields, PERIOD_FIELDS.name)) === previousKey
+  );
+  if (!previousPeriod) return { skipped: true, reason: `Aucune période ${previousKey} à clôturer.` };
+
+  const reportRows = await listRecords(env, REPORTS.table);
+  const existing = reportRows.find(row =>
+    links(val(row.fields, REPORTS.period)).some(link => link.id === previousPeriod.id)
+  );
+  if (existing) return { created: false, reportId: existing.id, period: previousKey, reason: "Bilan déjà présent." };
+
+  await airtableUpsert(env, SOCIAL.periods, PERIOD_FIELDS.name, [{
+    [PERIOD_FIELDS.name]: val(previousPeriod.fields, PERIOD_FIELDS.name),
+    [PERIOD_FIELDS.status]: "Clôturée"
+  }]);
+
+  const todayParts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit"
+  }).formatToParts(new Date());
+  const today = `${todayParts.find(x => x.type === "year")?.value}-${todayParts.find(x => x.type === "month")?.value}-${todayParts.find(x => x.type === "day")?.value}`;
+  const created = await airtableUpsert(env, REPORTS.table, REPORTS.name, [{
+    [REPORTS.name]: `Bilan ${previousKey}`,
+    [REPORTS.period]: [previousPeriod.id],
+    [REPORTS.generatedAt]: today,
+    [REPORTS.status]: "Généré"
+  }]);
+  if (!created[0]?.id) throw new Error("Airtable n'a pas confirmé la création du bilan mensuel.");
+  return { created: true, reportId: created[0].id, period: previousKey };
+}
+
 async function linkPreviousSocialRecords(env) {
   const [periodRows, socialRows] = await Promise.all([
     listRecords(env, SOCIAL.periods),
@@ -285,6 +333,13 @@ async function linkPreviousSocialRecords(env) {
 }
 
 
+const REPORTS = {
+  table: "tblK22dlumiLewC0x",
+  name: "fldSIKd8IM5jaw0JU",
+  period: "fldbYgvVBvnJLlYX6",
+  generatedAt: "fldHo1nW8uglQZqM0",
+  status: "fldOOBKuiZiVtPGiC"
+};
 const SOCIAL_FIELDS = {
   entry: "fldVAc6U6BHj3Gsj2", period: "fld6lEMD8yfmanPRe",
   platform: "fldCPgNpDnR4pOe5S", followers: "fldJVoRsh5vlSwPqm",
@@ -310,7 +365,7 @@ function currentParisPeriod() {
   const name = `${monthName.charAt(0).toLocaleUpperCase("fr-FR")}${monthName.slice(1)} ${year}`;
   const start = `${key}-01`;
   const endDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
-  return { key, name, start, end: `${key}-${String(endDay).padStart(2, "0")}` };
+  return { key, name, start, end: `${key}-${String(endDay).padStart(2, "0")}`, day: Number(parts.find(x => x.type === "day")?.value || 1) };
 }
 async function airtableUpsert(env, tableId, mergeFieldId, records) {
   const url = new URL(`https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${tableId}`);
@@ -795,20 +850,35 @@ async function handle(request, env) {
 export default {
   fetch: handle,
   scheduled: async (event, env, ctx) => {
-    ctx.waitUntil(
-      Promise.allSettled([syncMatches(env), linkPreviousSocialRecords(env), syncYoutubePublicStats(env), syncYoutubeAnalytics(env), syncTwitchStats(env)])
-        .then(([matches, socialLinks, youtube, youtubeAnalytics, twitch]) => {
-          if (matches.status === "fulfilled") console.log("BLF_SYNC_OK", JSON.stringify(matches.value));
-          else console.error("BLF_SYNC_ERROR", matches.reason?.stack || matches.reason?.message || String(matches.reason));
-          if (socialLinks.status === "fulfilled") console.log("BLF_SOCIAL_LINKS_OK", JSON.stringify(socialLinks.value));
-          else console.error("BLF_SOCIAL_LINKS_ERROR", socialLinks.reason?.stack || socialLinks.reason?.message || String(socialLinks.reason));
-          if (youtube.status === "fulfilled") console.log("BLF_YOUTUBE_SYNC", JSON.stringify(youtube.value));
-          else console.error("BLF_YOUTUBE_SYNC_ERROR", youtube.reason?.stack || youtube.reason?.message || String(youtube.reason));
-          if (youtubeAnalytics.status === "fulfilled") console.log("BLF_YOUTUBE_ANALYTICS_SYNC", JSON.stringify(youtubeAnalytics.value));
-          else console.error("BLF_YOUTUBE_ANALYTICS_ERROR", youtubeAnalytics.reason?.stack || youtubeAnalytics.reason?.message || String(youtubeAnalytics.reason));
-          if (twitch.status === "fulfilled") console.log("BLF_TWITCH_SYNC", JSON.stringify(twitch.value));
-          else console.error("BLF_TWITCH_SYNC_ERROR", twitch.reason?.stack || twitch.reason?.message || String(twitch.reason));
-        })
-    );
+    ctx.waitUntil((async () => {
+      try {
+        console.log("BLF_PERIOD_CURRENT", JSON.stringify(await ensureCurrentPeriod(env)));
+      } catch (error) {
+        console.error("BLF_PERIOD_CURRENT_ERROR", error?.stack || error?.message || String(error));
+      }
+
+      const results = await Promise.allSettled([
+        syncMatches(env),
+        syncYoutubePublicStats(env),
+        syncYoutubeAnalytics(env),
+        syncTwitchStats(env)
+      ]);
+      const labels = ["BLF_SYNC", "BLF_YOUTUBE_SYNC", "BLF_YOUTUBE_ANALYTICS_SYNC", "BLF_TWITCH_SYNC"];
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled") console.log(labels[index] + "_OK", JSON.stringify(result.value));
+        else console.error(labels[index] + "_ERROR", result.reason?.stack || result.reason?.message || String(result.reason));
+      });
+
+      try {
+        console.log("BLF_SOCIAL_LINKS_OK", JSON.stringify(await linkPreviousSocialRecords(env)));
+      } catch (error) {
+        console.error("BLF_SOCIAL_LINKS_ERROR", error?.stack || error?.message || String(error));
+      }
+      try {
+        console.log("BLF_MONTHLY_BILAN", JSON.stringify(await generatePreviousMonthBilan(env)));
+      } catch (error) {
+        console.error("BLF_MONTHLY_BILAN_ERROR", error?.stack || error?.message || String(error));
+      }
+    })());
   }
 };
